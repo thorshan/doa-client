@@ -18,8 +18,15 @@ import {
   Table,
   Zoom,
   Fab,
+  IconButton,
+  Collapse,
 } from "@mui/material";
-import { ArrowBack, KeyboardArrowUpRounded } from "@mui/icons-material";
+import {
+  ArrowBack,
+  ExpandLess,
+  ExpandMore,
+  KeyboardArrowUpRounded,
+} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
@@ -36,6 +43,8 @@ const CardDetails = () => {
   const [error, setError] = useState(null);
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [showBtn, setShowBtn] = useState(false);
+  const [openTable, setOpenTable] = useState(false);
+  const [openGrammar, setOpenGrammar] = useState(false);
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -139,7 +148,7 @@ const CardDetails = () => {
           borderColor: "divider",
         }}
       >
-        <Stack direction="row" spacing={{ sm: 3, xs: 2 }} >
+        <Stack direction="row" spacing={{ sm: 3, xs: 2 }}>
           <Button
             variant="text"
             color="primary"
@@ -216,41 +225,106 @@ const CardDetails = () => {
         </DialogActions>
       </Dialog>
 
-      <Box sx={{ mb: 10 }}>
-        <Typography variant="h5" sx={{ my: 2 }}>
-          {translations[language].kanji_list}
-        </Typography>
-        <Table size="small">
-          <TableHead sx={{ backgroundColor: "primary.main" }}>
-            <TableRow>
-              <TableCell sx={{ color: "white" }}>
-                {translations[language]._no}
-              </TableCell>
-              <TableCell align="right" sx={{ color: "white" }}>
-                {translations[language].kanji}
-              </TableCell>
-              <TableCell align="right" sx={{ color: "white" }}>
-                {translations[language].reading}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {card.furigana.map((item, index) => (
-              <TableRow
-                key={item._id}
-                sx={{
-                  "&:nth-of-type(odd)": {
-                    backgroundColor: "action.hover",
-                  },
-                }}
+      <Box sx={{ mt: 4 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 1 }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>{translations[language].grammar_note}</Typography>
+
+          <Button size="small" onClick={() => setOpenGrammar((p) => !p)}>
+            {openGrammar ? translations[language].close_list : translations[language].see_list}
+          </Button>
+        </Stack>
+
+        <Collapse in={openGrammar}>
+          {card.grammar?.map((g, index) => (
+            <Box
+              key={g._id}
+              sx={{
+                p: 2,
+                mb: 2,
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                {index + 1}. {g.pattern}
+              </Typography>
+
+              <Typography variant="body2" color="primary" sx={{ mt: 0.5 }}>
+                {g.meaning}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, color: "text.secondary" }}
               >
-                <TableCell>{index + 1}</TableCell>
-                <TableCell align="right">{item.kanji}</TableCell>
-                <TableCell align="right">{item.reading}</TableCell>
+                {translations[language].example}: {g.example}
+              </Typography>
+            </Box>
+          ))}
+        </Collapse>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            my: 2,
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            {translations[language].kanji_list}
+          </Typography>
+
+          <Button onClick={() => setOpenTable((prev) => !prev)}>
+            <Typography variant="body1" color="primary">
+              {openTable
+                ? translations[language].see_list
+                : translations[language].close_list}
+            </Typography>
+          </Button>
+        </Box>
+
+        <Collapse in={openTable} timeout="auto" unmountOnExit>
+          <Table size="small">
+            <TableHead sx={{ backgroundColor: "primary.main" }}>
+              <TableRow>
+                <TableCell sx={{ color: "white" }}>
+                  {translations[language]._no}
+                </TableCell>
+                <TableCell align="right" sx={{ color: "white" }}>
+                  {translations[language].kanji}
+                </TableCell>
+                <TableCell align="right" sx={{ color: "white" }}>
+                  {translations[language].reading}
+                </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {card.furigana.map((item, index) => (
+                <TableRow
+                  key={item._id}
+                  sx={{
+                    "&:nth-of-type(odd)": {
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                >
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell align="right">{item.kanji}</TableCell>
+                  <TableCell align="right">{item.reading}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Collapse>
       </Box>
     </Box>
   );

@@ -54,6 +54,10 @@ export const translations = {
     filter: "Filter",
     kanji_list: "Kanji List",
     register: "Register",
+    see_list: "Show",
+    close_list: "Hide",
+    grammar_note: "Grammar Notes",
+    example: "Example",
   },
   mm: {
     processing: "ဆောင်ရွက်နေသည် ...",
@@ -111,6 +115,10 @@ export const translations = {
     filter: "စစ်ထုတ်ရန်",
     kanji_list: "ခန်းဂျိစာရင်း",
     register: "စာရင်းသွင်းရန်",
+    see_list: "ကြည့်ရန်",
+    close_list: "ပိတ်ရန်",
+    grammar_note: "သဒ္ဒါမှတ်စု",
+    example: "ဥပမာ",
   },
   jp: {
     processing: "処理中 ...",
@@ -190,5 +198,9 @@ export const translations = {
     filter: "フィルター",
     kanji_list: "漢字リスト",
     register: "Register",
+    see_list: "表示",
+    close_list: "非表示",
+    grammar_note: "文法ノート",
+    example: "例文",
   },
 };

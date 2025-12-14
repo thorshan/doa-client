@@ -5,7 +5,6 @@ import {
   CircularProgress,
   MenuItem,
   Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -14,12 +13,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cardApi } from "../../api/cardApi";
 import { DeleteRounded, ModeEditRounded } from "@mui/icons-material";
 import { CATEGORY } from "../../constants/category";
 import { LEVEL } from "../../constants/level";
-import { useEffect } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../constants/translations";
 
@@ -33,7 +31,7 @@ const Card = () => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    furigana: [],
+    grammar: [],
     category: "",
     level: "",
   });
@@ -42,15 +40,13 @@ const Card = () => {
   const [deleteCardId, setDeleteCardId] = useState(null);
   const [editingCard, setEditingCard] = useState(null);
 
-  //
+  // Fetch all cards
   const fetchCards = async () => {
     setLoading(true);
     try {
       const res = await cardApi.getAllCards();
-      console.log(res.data);
       setCards(res.data);
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
@@ -62,11 +58,35 @@ const Card = () => {
     fetchCards();
   }, []);
 
+  // =========================
+  // Grammar helper functions
+  // =========================
+  const updateGrammarField = (index, key, value) => {
+    const newGrammar = [...formData.grammar];
+    newGrammar[index][key] = value;
+    setFormData({ ...formData, grammar: newGrammar });
+  };
+
+  const removeGrammar = (index) => {
+    const newGrammar = formData.grammar.filter((_, i) => i !== index);
+    setFormData({ ...formData, grammar: newGrammar });
+  };
+
+  const addGrammar = () => {
+    setFormData({
+      ...formData,
+      grammar: [...formData.grammar, { pattern: "", meaning: "", example: "" }],
+    });
+  };
+
+  // =========================
+  // Handlers
+  // =========================
   const handleAdd = () => {
     setFormData({
       title: "",
       content: "",
-      furigana: [],
+      grammar: [{ pattern: "", meaning: "", example: "" }], // always start with 1
       category: "",
       level: "",
     });
@@ -77,8 +97,8 @@ const Card = () => {
   const handleEdit = (card) => {
     setFormData({
       ...card,
-      title: card.title,
       content: card.originalContent,
+      grammar: card.grammar.length > 0 ? card.grammar : [{ pattern: "", meaning: "", example: "" }],
       category: card.category,
       level: card.level,
     });
@@ -86,7 +106,6 @@ const Card = () => {
     setShowModel(true);
   };
 
-  // Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -101,7 +120,6 @@ const Card = () => {
       setShowModel(false);
       fetchCards();
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
@@ -110,7 +128,7 @@ const Card = () => {
     }
   };
 
-  // Handle Delete
+  // Delete handlers
   const openDeleteModal = (id) => {
     setDeleteCardId(id);
     setShowDeleteModal(true);
@@ -119,14 +137,10 @@ const Card = () => {
     if (deleteCardId) {
       try {
         await cardApi.deleteCard(deleteCardId);
-        setMessage("User deleted successfully.");
+        setMessage("Card deleted successfully.");
         fetchCards();
       } catch (err) {
-        const msg =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to delete user.";
-        setMessage(msg);
+        setMessage(err.response?.data?.message || err.message || "Failed to delete card.");
       } finally {
         setShowDeleteModal(false);
         setDeleteCardId(null);
@@ -134,7 +148,7 @@ const Card = () => {
     }
   };
 
-  // Loading component
+  // Loading state
   if (loading)
     return (
       <Backdrop
@@ -165,6 +179,10 @@ const Card = () => {
           Add new
         </Button>
       </Box>
+
+      {/* =====================
+          Modal Form
+      ===================== */}
       {showModel && (
         <Box
           sx={{
@@ -179,16 +197,13 @@ const Card = () => {
             zIndex: 1000,
           }}
         >
-          <Paper
-            sx={{
-              p: 4,
-              width: 400,
-            }}
-          >
+          <Paper sx={{ p: 4, width: 500, maxHeight: "90vh", overflowY: "auto" }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Add new card
+              {editingCard ? "Edit Card" : "Add New Card"}
             </Typography>
+
             <Box component="form" onSubmit={handleSubmit}>
+              {/* Title */}
               <TextField
                 fullWidth
                 label="Title"
@@ -198,6 +213,8 @@ const Card = () => {
                 }
                 sx={{ mb: 2 }}
               />
+
+              {/* Content */}
               <TextField
                 fullWidth
                 multiline
@@ -207,7 +224,58 @@ const Card = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, content: e.target.value })
                 }
+                sx={{ mb: 2 }}
               />
+
+              {/* Grammar Section */}
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Grammar Notes
+              </Typography>
+
+              {formData.grammar.map((g, idx) => (
+                <Paper key={idx} sx={{ p: 1, mb: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Pattern"
+                    value={g.pattern}
+                    onChange={(e) =>
+                      updateGrammarField(idx, "pattern", e.target.value)
+                    }
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Meaning"
+                    value={g.meaning}
+                    onChange={(e) =>
+                      updateGrammarField(idx, "meaning", e.target.value)
+                    }
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Example"
+                    value={g.example}
+                    onChange={(e) =>
+                      updateGrammarField(idx, "example", e.target.value)
+                    }
+                  />
+                  <Button
+                    color="error"
+                    size="small"
+                    sx={{ mt: 1 }}
+                    onClick={() => removeGrammar(idx)}
+                  >
+                    Remove
+                  </Button>
+                </Paper>
+              ))}
+
+              <Button size="small" variant="outlined" onClick={addGrammar} sx={{ mb: 2 }}>
+                Add Grammar Note
+              </Button>
+
+              {/* Category */}
               <TextField
                 fullWidth
                 select
@@ -224,6 +292,8 @@ const Card = () => {
                   </MenuItem>
                 ))}
               </TextField>
+
+              {/* Level */}
               <TextField
                 fullWidth
                 select
@@ -240,6 +310,8 @@ const Card = () => {
                   </MenuItem>
                 ))}
               </TextField>
+
+              {/* Buttons */}
               <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   variant="outlined"
@@ -249,12 +321,7 @@ const Card = () => {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  disabled={loading}
-                >
+                <Button type="submit" variant="contained" color="primary">
                   {editingCard ? "Update" : "Add"}
                 </Button>
               </Box>
@@ -263,7 +330,9 @@ const Card = () => {
         </Box>
       )}
 
-      {/* */}
+      {/* =========================
+          Delete Modal
+      ========================= */}
       {showDeleteModal && (
         <Box
           sx={{
@@ -290,9 +359,7 @@ const Card = () => {
             <Typography variant="h6" mb={2}>
               {translations[language].caution}
             </Typography>
-            <Typography mb={3}>
-              {translations[language].delete_confirm}
-            </Typography>
+            <Typography mb={3}>{translations[language].delete_confirm}</Typography>
             <Box display="flex" justifyContent="center">
               <Button
                 variant="outlined"
@@ -310,6 +377,9 @@ const Card = () => {
         </Box>
       )}
 
+      {/* =========================
+          Cards Table
+      ========================= */}
       <Box sx={{ mt: 3 }}>
         <Table size="small">
           <TableHead>
@@ -329,18 +399,9 @@ const Card = () => {
                 <TableCell>{card.title}</TableCell>
                 <TableCell>{card.category}</TableCell>
                 <TableCell>{card.level}</TableCell>
-                <TableCell>
-                  {new Date(card.createdAt).toLocaleDateString()}
-                </TableCell>
+                <TableCell>{new Date(card.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
+                  <Box sx={{ display: "flex", gap: 2 }}>
                     <Button
                       variant="outlined"
                       color="success"

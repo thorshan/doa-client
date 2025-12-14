@@ -1,1 +1,1 @@
-export const API = "https://doa-server-5q15.onrender.com"; //https://doa-server-5q15.onrender.com
+export const API = "http://localhost:5050"; //https://doa-server-5q15.onrender.com
