@@ -173,14 +173,14 @@ const Search = () => {
               onSubmit={handleFilter}
               sx={{
                 display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-evenly",
-                alignItems: "center",
+                flexDirection: { xs: "column", sm: "row"},
+                justifyContent: "space-around",
+                alignItems: {xs: "flex-start", sm: "center"},
                 gap: 2,
               }}
             >
               {!isMobile && (
-                <Typography variant="subtitle1">
+                <Typography variant="subtitle1" sx={{ flexShrink: 1}}>
                   {translations[language].filter}
                 </Typography>
               )}
@@ -197,7 +197,7 @@ const Search = () => {
                   <MenuItem key={key} value={CATEGORY[key]}>
                     {translations[language][key]}
                   </MenuItem>
-                ))}
+                ))} 
               </TextField>
               <TextField
                 fullWidth
@@ -214,7 +214,7 @@ const Search = () => {
                   </MenuItem>
                 ))}
               </TextField>
-              <Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary" fullWidth>
                 {translations[language].submit}
               </Button>
               {isFiltered && (
@@ -222,6 +222,7 @@ const Search = () => {
                   variant="contained"
                   color="error"
                   onClick={resetFiltered}
+                  fullWidth
                 >
                   {translations[language].reset}
                 </Button>
@@ -257,7 +258,6 @@ const Search = () => {
           width: "95%",
           borderRadius: 4,
           backdropFilter: "blur(12px)",
-          background: theme.palette.primary.main + "20",
           boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
         }}
         elevation={4}

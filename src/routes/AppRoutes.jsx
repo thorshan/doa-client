@@ -9,11 +9,14 @@ import Archive from "../pages/utils/Archive";
 import Card from "../pages/admin/Card";
 import CardDetails from "../pages/user/CardDetails";
 import Profile from "../pages/user/Profile";
+import GetStarted from "../pages/GetStarted";
+import EditProfile from "../pages/user/EditProfile";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
+      <Route path="/get-started" element={<GetStarted />} />
       <Route path="/" element={<Home />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
@@ -50,6 +53,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/:id/profile/edit"
+        element={
+          <ProtectedRoute>
+            <EditProfile />
           </ProtectedRoute>
         }
       />

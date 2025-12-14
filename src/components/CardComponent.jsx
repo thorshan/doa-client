@@ -25,8 +25,8 @@ const CardComponent = ({ data, index }) => {
         return translations[language].other;
       case "Anime":
         return translations[language].anime;
-      case "Story":
-        return translations[language].story;
+      case "Experience":
+        return translations[language].experience;
       case "Comedy":
         return translations[language].comedy;
       default:

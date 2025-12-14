@@ -6,6 +6,8 @@ import {
   Typography,
   IconButton,
   Avatar,
+  Divider,
+  Paper,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -21,6 +23,7 @@ import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import ConfirmDialog from "../../components/ConfirmDialog";
+import { API } from "../../constants/API";
 
 const Settings = () => {
   const { logout, isAuthenticated, user } = useAuth();
@@ -37,7 +40,7 @@ const Settings = () => {
 
   return (
     <Box sx={{ p: { sm: 3, xs: 2 } }}>
-      <Stack direction={"row"} spacing={{ sm: 3, xs: 2 }}>
+      <Stack direction={"row"} spacing={{ sm: 3, xs: 1 }}>
         <Button
           variant="text"
           color="primary"
@@ -45,7 +48,7 @@ const Settings = () => {
           startIcon={<ArrowBack />}
           sx={{ textTransform: "none" }}
           onClick={handleBack}
-        ></Button>
+        >{translations[language].go_back}</Button>
         <Typography
           variant="h6"
           fontWeight={{ sm: "bold" }}
@@ -57,46 +60,40 @@ const Settings = () => {
       </Stack>
       <Box>
         {isAuthenticated && (
-          <Box
+          <Paper
             sx={{
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
               p: 2,
-              border: 1,
-              borderColor: "primary.main",
-              borderRadius: 4,
               mt: 3,
               height: 90,
             }}
           >
             <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center"}}>
-              <Avatar></Avatar>
+              <Avatar src={`${API}${user?.image?.filePath}`}>{user?.name?.[0]}</Avatar>
               <Typography variant="subtitle1" sx={{ ml: 2}}>{user?.name}</Typography>
             </Box>
             <Button
               variant="text"
               color="primary"
               endIcon={<NavigateNextRounded sx={{ ml: 0.5 }} />}
-              href={`/${user.name}/profile`}
+              onClick={() => navigate(`/${user.name}/profile`, {state: {id: user._id}})}
             >
               {translations[language].profile}
             </Button>
-          </Box>
+          </Paper>
         )}
-        <Box
+        <Paper
           sx={{
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
             p: 2,
-            border: 1,
-            borderColor: "primary.main",
-            borderRadius: 4,
             mt: 3,
-            height: 50,
+            height: 50
           }}
         >
           <Typography variant="subtitle1">
@@ -105,37 +102,31 @@ const Settings = () => {
           <IconButton onClick={toggleColorMode} color="primary">
             {theme.palette.mode === "dark" ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
-        </Box>
-        <Box
+        </Paper>
+        <Paper
           sx={{
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
             p: 2,
-            border: 1,
-            borderColor: "primary.main",
-            borderRadius: 4,
             mt: 3,
-            height: 50,
+            height: 50 
           }}
         >
           <Typography variant="subtitle1">
             {translations[language].language}
           </Typography>
           <LanguageToggler />
-        </Box>
+        </Paper>
         {isAuthenticated && (
-          <Box
+          <Paper
             sx={{
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
               p: 2,
-              border: 1,
-              borderColor: "primary.main",
-              borderRadius: 4,
               mt: 3,
               height: 50,
             }}
@@ -150,7 +141,7 @@ const Settings = () => {
             >
               {translations[language].logout}
             </Button>
-          </Box>
+          </Paper>
         )}
       </Box>
 
