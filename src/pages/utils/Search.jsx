@@ -243,7 +243,7 @@ const Search = () => {
             </Box>
           </>
         ) : (
-          <Typography variant="body2" sx={{ textAlign: "center" }}>
+          <Typography variant="body2" sx={{ textAlign: "center", mt: 5 }}>
             {translations[language].expolre_search}
           </Typography>
         )}

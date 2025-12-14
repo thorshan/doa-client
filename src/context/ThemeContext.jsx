@@ -77,14 +77,16 @@ export const ColorModeProvider = ({ children }) => {
           primary:
             mode === "light"
               ? {
-                  main: "#e43636",
-                  loading: "#444",
-                  border: "#444",
+                  main: "#047e4bff",
+                  loading: "#081d2a",
+                  border: "#081d2a",
+                  footer: "#081d2a",
                 }
               : {
-                  main: "#ff3f33",
+                  main: "#009959ff",
                   loading: "#efefef",
                   border: "#efefef",
+                  footer: "#081d2a",
                 },
           secondary:
             mode === "light"
@@ -101,14 +103,14 @@ export const ColorModeProvider = ({ children }) => {
                   paper: "#efefef",
                 }
               : {
-                  default: "#444",
-                  paper: "#444",
+                  default: "#081d2a",
+                  paper: "#081d2a",
                 },
 
           text:
             mode === "light"
               ? {
-                  primary: "#444",
+                  primary: "#081d2a",
                 }
               : {
                   primary: "#efefef",

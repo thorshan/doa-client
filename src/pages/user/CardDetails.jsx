@@ -18,15 +18,9 @@ import {
   Table,
   Zoom,
   Fab,
-  IconButton,
   Collapse,
 } from "@mui/material";
-import {
-  ArrowBack,
-  ExpandLess,
-  ExpandMore,
-  KeyboardArrowUpRounded,
-} from "@mui/icons-material";
+import { ArrowBack, KeyboardArrowUpRounded } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
@@ -225,6 +219,7 @@ const CardDetails = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Grammar notes */}
       <Box sx={{ mt: 4 }}>
         <Stack
           direction="row"
@@ -232,10 +227,16 @@ const CardDetails = () => {
           alignItems="center"
           sx={{ mb: 1 }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>{translations[language].grammar_note}</Typography>
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            {translations[language].grammar_note}
+          </Typography>
 
           <Button size="small" onClick={() => setOpenGrammar((p) => !p)}>
-            {openGrammar ? translations[language].close_list : translations[language].see_list}
+            <Typography variant="button" color="primary">
+              {openGrammar
+                ? translations[language].close_list
+                : translations[language].see_list}
+            </Typography>
           </Button>
         </Stack>
 
@@ -245,7 +246,7 @@ const CardDetails = () => {
               key={g._id}
               sx={{
                 p: 2,
-                mb: 2,
+                my: 2,
                 borderRadius: 1,
                 border: "1px solid",
                 borderColor: "divider",
@@ -270,6 +271,7 @@ const CardDetails = () => {
         </Collapse>
       </Box>
 
+      {/* Kanji List */}
       <Box sx={{ mb: 10 }}>
         <Box
           sx={{
@@ -284,10 +286,10 @@ const CardDetails = () => {
           </Typography>
 
           <Button onClick={() => setOpenTable((prev) => !prev)}>
-            <Typography variant="body1" color="primary">
+            <Typography variant="button" color="primary">
               {openTable
-                ? translations[language].see_list
-                : translations[language].close_list}
+                ? translations[language].close_list
+                : translations[language].see_list}
             </Typography>
           </Button>
         </Box>

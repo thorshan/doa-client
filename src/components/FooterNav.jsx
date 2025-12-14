@@ -1,11 +1,11 @@
 import {
+  alpha,
   BottomNavigation,
   BottomNavigationAction,
   Paper,
   useTheme,
 } from "@mui/material";
 import {
-  ArchiveRounded,
   HomeRounded,
   SearchRounded,
   SettingsRounded,
@@ -18,6 +18,7 @@ const FooterNav = () => {
   const { language } = useLanguage();
   const [value, setValue] = useState(0);
   const theme = useTheme();
+  const glassBackground = alpha(theme.palette.primary.footer, 0.3);
   return (
     <Paper
       sx={{
@@ -26,11 +27,12 @@ const FooterNav = () => {
         left: 0,
         right: 0,
         mx: "auto",
-        width: "95%",
+        width: "90%",
         borderRadius: 4,
-        backdropFilter: "blur(12px)",
-        background: theme.palette.primary.main + "20",
+        backdropFilter: "blur(15px)",
+        background: glassBackground,
         boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+        border: "0.5px solid rgba(255, 255, 255, 0.1)",
       }}
       elevation={4}
     >
@@ -40,6 +42,7 @@ const FooterNav = () => {
         onChange={(event, newValue) => setValue(newValue)}
         sx={{
           borderRadius: 4,
+          background: "transparent",
           "& .MuiBottomNavigationAction-root": {
             color: theme.palette.primary.dark + "99",
             transition: "0.3s",
@@ -57,14 +60,6 @@ const FooterNav = () => {
           label={translations[language].home}
           icon={<HomeRounded />}
         />
-        {/* <BottomNavigationAction
-          href="/user/archives"
-          sx={{
-            "& .MuiBottomNavigationAction-label": { fontSize: 10 },
-          }}
-          label={translations[language].archive || "Archives"}
-          icon={<ArchiveRounded />}
-        /> */}
         <BottomNavigationAction
           href="/search"
           sx={{
