@@ -270,7 +270,7 @@ const CardDetails = () => {
         </Collapse>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 10 }}>
         <Box
           sx={{
             display: "flex",
