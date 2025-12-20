@@ -236,8 +236,10 @@ const GetStarted = () => {
               )}
             </Button>
             <LanguageTogglerS />
-            <Button>{translations[language].register}</Button>
-            <Button variant="contained">{translations[language].login}</Button>
+            <Button href="/register">{translations[language].register}</Button>
+            <Button variant="contained" href="/login">
+              {translations[language].login}
+            </Button>
           </Stack>
         </Box>
       </Drawer>
@@ -317,12 +319,7 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button
-              variant="contained"
-              size="large"
-              sx={{ mt: 3 }}
-              href="/app"
-            >
+            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
               ドアヘようこそう
             </Button>
           </Box>
@@ -371,12 +368,7 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button
-              variant="contained"
-              size="large"
-              sx={{ mt: 3 }}
-              href="/app"
-            >
+            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
               စတင်ကြိုးစားမယ်
             </Button>
           </Box>
@@ -425,12 +417,7 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button
-              variant="contained"
-              size="large"
-              sx={{ mt: 3 }}
-              href="/app"
-            >
+            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
               Get Started
             </Button>
           </Box>
