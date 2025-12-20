@@ -62,6 +62,7 @@ const CardDetails = () => {
     navigate(-1);
   };
 
+  // Handle Scroll
   useEffect(() => {
     const handleScroll = () => {
       setShowBtn(window.pageYOffset > 300);
@@ -196,6 +197,7 @@ const CardDetails = () => {
         onClose={() => setSelectedKanji(null)}
         maxWidth="xs"
         fullWidth
+        PaperProps={{ sx: { borderRadius: 5 } }}
       >
         <DialogTitle>{translations[language].kanji_info}</DialogTitle>
         <DialogContent>
@@ -247,7 +249,7 @@ const CardDetails = () => {
               sx={{
                 p: 2,
                 my: 2,
-                borderRadius: 1,
+                borderRadius: 5,
                 border: "1px solid",
                 borderColor: "divider",
               }}

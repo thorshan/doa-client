@@ -80,7 +80,7 @@ export const ColorModeProvider = ({ children }) => {
                   main: "#047e4bff",
                   loading: "#081d2a",
                   border: "#081d2a",
-                  footer: "#081d2a",
+                  footer: "#efefef",
                 }
               : {
                   main: "#009959ff",

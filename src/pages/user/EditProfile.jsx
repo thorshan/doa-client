@@ -90,13 +90,11 @@ const EditProfile = () => {
 
   const handleSubmit = async () => {
     try {
-      console.log(id, { ...formData, image: imageFile });
-      const res = await userApi.updateUser(id, {
+      await userApi.updateUser(id, {
         ...formData,
         image: imageFile,
       });
-      console.log(res);
-      navigate(`/settings`);
+      navigate(`/app`);
     } catch (err) {
       console.error("Error updating user", err.message);
       setError(err.response?.data?.message || err.message);

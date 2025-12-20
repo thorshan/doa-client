@@ -1,85 +1,107 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import Home from "../pages/Home";
+
+// Pages
+import GetStarted from "../pages/GetStarted";
 import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
+import Home from "../pages/Home";
+import Level from "../pages/user/Level";
 import Settings from "../pages/utils/Settings";
-import Search from "../pages/utils/Search";
-import Archive from "../pages/utils/Archive";
-import Card from "../pages/admin/Card";
-import CardDetails from "../pages/user/CardDetails";
+import Basic from "../pages/basic/Basic";
+import SelectOption from "../pages/vocab/SelectOption";
+import Grammar from "../pages/grammar/Grammar";
+import N5Grammar from "../pages/grammar/N5Grammar";
+import N4Grammar from "../pages/grammar/N4Grammar";
+import N3Grammar from "../pages/grammar/N3Grammar";
+import N2Grammar from "../pages/grammar/N2Grammar";
+import N1Grammar from "../pages/grammar/N1Grammar";
+import ChapterDetails from "../pages/grammar/ChapterDetails";
+import Search from "../pages/reading/Search";
+import Card from "../pages/reading/Card";
+import CardDetails from "../pages/reading/CardDetails";
 import Profile from "../pages/user/Profile";
-import GetStarted from "../pages/GetStarted";
 import EditProfile from "../pages/user/EditProfile";
+import AdminCards from "../pages/admin/Card";
+import NotFound from "../pages/utils/NotFound";
+import BasicDetails from "../pages/basic/BasicDetails";
+import BasicExam from "../pages/basic/BasicExam";
+import Finish from "../pages/basic/Finish";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/get-started" element={<GetStarted />} />
-      <Route path="/" element={<Home />} />
+      {/* ===== Public ===== */}
+      <Route path="/" element={<GetStarted />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/settings" element={<Settings />} />
-      {/* Public Routes */}
 
-      {/* Auth Routes */}
+      {/* ===== Home (Protected) ===== */}
       <Route
-        path="/search"
+        path="/app"
         element={
           <ProtectedRoute>
-            <Search />
+            <Home />
           </ProtectedRoute>
         }
-      />
-      <Route    
-        path="/user/archives"
-        element={
-          <ProtectedRoute>
-            <Archive />
-          </ProtectedRoute>
-        }
-      /> 
-      <Route
-        path="/cards/:id"
-        element={
-          <ProtectedRoute>
-            <CardDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/:id/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/:id/profile/edit"
-        element={
-          <ProtectedRoute>
-            <EditProfile />
-          </ProtectedRoute>
-        }
-      />
-      {/* Auth Routes */}
+      >
+        <Route path="level" element={<Level />} />
+        <Route path="settings" element={<Settings />} />
 
-      {/* Admin Routes */}
+        {/* Basic */}
+        <Route path="basic" element={<Basic />}>
+          <Route path="lectures/:lectureId" element={<BasicDetails />} />
+          <Route path="exam" element={<BasicExam />} />
+          <Route path="finish" element={<Finish />} />
+        </Route>
+
+        {/* Vocab */}
+        <Route path="moji-goi">
+          <Route path="options" element={<SelectOption />} />
+        </Route>
+
+        {/* Grammar */}
+        <Route path="grammar" element={<Grammar />}>
+          <Route path="n5" element={<N5Grammar />} />
+          <Route path="n4" element={<N4Grammar />} />
+          <Route path="n3" element={<N3Grammar />} />
+          <Route path="n2" element={<N2Grammar />} />
+          <Route path="n1" element={<N1Grammar />} />
+          <Route
+            path="courses/:courseId/lectures/:lectureId"
+            element={<ChapterDetails />}
+          />
+        </Route>
+
+        {/* Reading */}
+        <Route path="reading">
+          <Route path="search" element={<Search />} />
+          <Route path="cards" element={<Card />} />
+          <Route path="cards/:id" element={<CardDetails />} />
+        </Route>
+
+        {/* User */}
+        <Route path=":id">
+          <Route path="profile" element={<Profile />} />
+          <Route path="profile/edit" element={<EditProfile />} />
+        </Route>
+      </Route>
+
+      {/* ===== Admin (Separate) ===== */}
       <Route
-        path="/admin/cards"
+        path="/admin"
         element={
           <ProtectedRoute>
-            <Card />
+            {/* Optional AdminLayout */}
+            <AdminCards />
           </ProtectedRoute>
         }
-      />
-      {/* Admin Routes */}
+      >
+        <Route path="cards" element={<AdminCards />} />
+      </Route>
 
-      {/* Error Routes */}
-      <Route path="/" element={<Navigate to="/login" />} />
-      {/* Error Routes */}
+      {/* ===== Error ===== */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

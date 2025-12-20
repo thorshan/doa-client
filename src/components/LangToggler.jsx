@@ -5,7 +5,7 @@ import { useLanguage } from "../context/LanguageContext";
 
 // Language options
 const LANGUAGES = [
-  { code: "en", label: "En" },
+  { code: "en", label: "English" },
   { code: "mm", label: "မြန်မာ" },
   { code: "jp", label: "日本" },
   // Add more languages here

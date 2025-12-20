@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -6,7 +6,6 @@ import {
   Typography,
   IconButton,
   Avatar,
-  Divider,
   Paper,
 } from "@mui/material";
 import {
@@ -24,6 +23,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import { API } from "../../constants/API";
+import { userApi } from "../../api/userApi";
 
 const Settings = () => {
   const { logout, isAuthenticated, user } = useAuth();
@@ -32,6 +32,19 @@ const Settings = () => {
   const { toggleColorMode } = useColorMode();
   const { language } = useLanguage();
   const [openDialog, setOpenDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState(user);
+
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const res = await userApi.getUserData(user?.id);
+        setCurrentUser(res.data);
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
+    getUserData();
+  }, [user?.id]);
 
   const handleBack = (e) => {
     e.preventDefault();
@@ -48,7 +61,9 @@ const Settings = () => {
           startIcon={<ArrowBack />}
           sx={{ textTransform: "none" }}
           onClick={handleBack}
-        >{translations[language].go_back}</Button>
+        >
+          {translations[language].go_back}
+        </Button>
         <Typography
           variant="h6"
           fontWeight={{ sm: "bold" }}
@@ -69,17 +84,32 @@ const Settings = () => {
               p: 2,
               mt: 3,
               height: 90,
+              borderRadius: 5,
             }}
           >
-            <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center"}}>
-              <Avatar src={`${API}${user?.image?.filePath}`}>{user?.name?.[0]}</Avatar>
-              <Typography variant="subtitle1" sx={{ ml: 2}}>{user?.name}</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+            >
+              <Avatar src={`${API}${currentUser?.image?.filePath}`}>
+                {currentUser?.name?.[0]}
+              </Avatar>
+              <Typography variant="subtitle1" sx={{ ml: 2 }}>
+                {currentUser?.name}
+              </Typography>
             </Box>
             <Button
               variant="text"
               color="primary"
               endIcon={<NavigateNextRounded sx={{ ml: 0.5 }} />}
-              onClick={() => navigate(`/${user.name}/profile`, {state: {id: user._id}})}
+              onClick={() =>
+                navigate(`/app/${currentUser.username}/profile`, {
+                  state: { id: currentUser._id },
+                })
+              }
             >
               {translations[language].profile}
             </Button>
@@ -93,7 +123,8 @@ const Settings = () => {
             alignItems: "center",
             p: 2,
             mt: 3,
-            height: 50
+            height: 50,
+            borderRadius: 5,
           }}
         >
           <Typography variant="subtitle1">
@@ -111,7 +142,8 @@ const Settings = () => {
             alignItems: "center",
             p: 2,
             mt: 3,
-            height: 50 
+            height: 50,
+            borderRadius: 5,
           }}
         >
           <Typography variant="subtitle1">
@@ -129,6 +161,7 @@ const Settings = () => {
               p: 2,
               mt: 3,
               height: 50,
+              borderRadius: 5,
             }}
           >
             <Typography variant="subtitle1">
@@ -148,10 +181,10 @@ const Settings = () => {
       {/* Confirm Dialog */}
       {isAuthenticated && (
         <ConfirmDialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        onConfirm={logout}
-      />
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          onConfirm={logout}
+        />
       )}
     </Box>
   );

@@ -28,7 +28,7 @@ const FooterNav = () => {
         right: 0,
         mx: "auto",
         width: "90%",
-        borderRadius: 4,
+        borderRadius: 5,
         backdropFilter: "blur(15px)",
         background: glassBackground,
         boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
@@ -41,7 +41,7 @@ const FooterNav = () => {
         value={value}
         onChange={(event, newValue) => setValue(newValue)}
         sx={{
-          borderRadius: 4,
+          borderRadius: 5,
           background: "transparent",
           "& .MuiBottomNavigationAction-root": {
             color: theme.palette.primary.dark + "99",
@@ -56,12 +56,12 @@ const FooterNav = () => {
           sx={{
             "& .MuiBottomNavigationAction-label": { fontSize: 10 },
           }}
-          href="/"
+          href="/home"
           label={translations[language].home}
           icon={<HomeRounded />}
         />
         <BottomNavigationAction
-          href="/search"
+          href="/reading/search"
           sx={{
             "& .MuiBottomNavigationAction-label": { fontSize: 10 },
           }}

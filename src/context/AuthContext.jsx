@@ -33,6 +33,12 @@ function reducer(state, action) {
         loading: false,
       };
 
+    case "UPDATE_USER":
+      return {
+        ...state,
+        user: action.payload,
+      };
+
     case "LOGOUT":
       return {
         user: null,
@@ -45,7 +51,6 @@ function reducer(state, action) {
       return state;
   }
 }
-
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initState);
@@ -73,6 +78,15 @@ export const AuthProvider = ({ children }) => {
   // Register
   const register = async (data) => {
     const res = await authApi.register(data);
+    const { token, user } = res.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    dispatch({
+      type: "LOGIN",
+      payload: { token, user },
+    });
     return res.data;
   };
 
@@ -100,6 +114,14 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const updateUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+  dispatch({
+    type: "UPDATE_USER",
+    payload: user,
+  });
+};
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +129,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         register,
+        updateUser,
       }}
     >
       {children}

@@ -37,7 +37,7 @@ const Register = () => {
         ...formData,
         username: autoGenerateUsername,
       });
-      navigate("/login");
+      navigate("/");
     } catch (err) {
       console.error("Error registering user", err.message);
       setError(err.response?.data?.message || err.message);

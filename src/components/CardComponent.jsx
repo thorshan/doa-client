@@ -35,7 +35,7 @@ const CardComponent = ({ data, index }) => {
   };
 
   return (
-    <Card key={index} sx={{ my: 2, p: 1 }}>
+    <Card key={index} sx={{ my: 2, p: 1, borderRadius: 5 }}>
       <CardActionArea
         sx={{
           display: "flex",
@@ -45,7 +45,7 @@ const CardComponent = ({ data, index }) => {
           minWidth: 0,
         }}
         component={Link}
-        to={`/cards/${data._id}`}
+        to={`/reading/cards/${data._id}`}
       >
         <Typography variant="h6" fontWeight={600}>
           {data.title}
@@ -77,12 +77,12 @@ const CardComponent = ({ data, index }) => {
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        {/* <Box sx={{ display: "flex", alignItems: "center" }}>
           <StarRounded sx={{ mr: 1, color: "primary.main", fontSize: 14 }} />
           <Typography variant="caption" color="primary">
             {data.level}
           </Typography>
-        </Box>
+        </Box> */}
 
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <CategoryRounded
