@@ -300,6 +300,157 @@ export const GET_STARTED = [
       },
       {
         _id: 7,
+        title: "Youon「ようおん」",
+        tag: "[や|ヤ・ゆ｜ユ・よ｜ヨ]အသံပေါင်းခြင်း",
+        table: {
+          example: [
+            {
+              _id: 1,
+              hiragana: "ひゃく",
+              romaji: "hya ku",
+            },
+            {
+              _id: 2,
+              hiragana: "じゅう",
+              romaji: "jyuu",
+            },
+            {
+              _id: 3,
+              hiragana: "びょういん",
+              romaji: "byou in",
+            },
+            {
+              _id: 4,
+              hiragana: "おちゃ",
+              romaji: "o cha",
+            },
+            {
+              _id: 5,
+              hiragana: "りょこう",
+              romaji: "ryo kou",
+            },
+          ],
+          rows: [
+            {
+              _id: 1,
+              hira: ["きゃ", "", "きゅ", "", "きょ"],
+              romaji: ["Kya", "", "Kyu", "", "Kyo"],
+            },
+            {
+              _id: 2,
+              hira: ["しゃ", "", "しゅ", "", "しょ"],
+              romaji: ["Sha", "", "Shu", "", "Sho"],
+            },
+            {
+              _id: 3,
+              hira: ["ちゃ", "", "ちゅ", "", "ちょ"],
+              romaji: ["Cha", "", "Chu", "", "Cho"],
+            },
+            {
+              _id: 4,
+              hira: ["にゃ", "", "にゅ", "", "にょ"],
+              romaji: ["Nya", "", "Nyu", "", "Nyo"],
+            },
+            {
+              _id: 5,
+              hira: ["ひゃ", "", "ひゅ", "", "ひょ"],
+              romaji: ["Hya", "", "Hyu", "", "Hyo"],
+            },
+            {
+              _id: 6,
+              hira: ["みゃ", "", "みゅ", "", "みょ"],
+              romaji: ["Mya", "", "Myu", "", "Myo"],
+            },
+            {
+              _id: 7,
+              hira: ["りゃ", "", "りゅ", "", "りょ"],
+              romaji: ["Rya", "", "Ryu", "", "Ryo"],
+            },
+            {
+              _id: 8,
+              hira: ["ぎゃ", "", "ぎゅ", "", "ぎょ"],
+              romaji: ["Gya", "", "Gyu", "", "Gyo"],
+            },
+            {
+              _id: 9,
+              hira: ["じゃ", "", "じゅ", "", "じょ"],
+              romaji: ["Ja", "", "Ju", "", "Jo"],
+            },
+            {
+              _id: 10,
+              hira: ["びゃ", "", "びゅ", "", "びょ"],
+              romaji: ["Bya", "", "Byu", "", "Byo"],
+            },
+            {
+              _id: 11,
+              hira: ["ぴゃ", "", "ぴゅ", "", "ぴょ"],
+              romaji: ["Pya", "", "Pyu", "", "Pyo"],
+            },
+          ],
+        },
+      },
+      {
+        _id: 8,
+        title: "Hatsuon「はつおん」",
+        tag: "[ん・ン]အသံပေါင်းခြင်း",
+        table: {
+          example: [
+            {
+              _id: 1,
+              hiragana: "うんどう",
+              romaji: "un dou",
+            },
+            {
+              _id: 2,
+              hiragana: "せんろ",
+              romaji: "sen ro",
+            },
+            {
+              _id: 3,
+              hiragana: "みんな",
+              romaji: "min na",
+            },
+            {
+              _id: 4,
+              hiragana: "はんたい",
+              romaji: "han tai",
+            },
+            {
+              _id: 5,
+              hiragana: "しんぶん",
+              romaji: "shin bun",
+            },
+          ],
+          rows: [
+            {
+              _id: 1,
+              hira: ["せん", "みん", "りん", "いん", "じゅん"],
+              romaji: ["sen", "min", "rin", "in", "jun"],
+            },
+            {
+              _id: 2,
+              hira: ["ヨン", "シュン", "ミャン", "モン", "シャン"],
+              romaji: ["yon", "shun", "myan", "mon", "shan"],
+            },
+          ],
+        },
+      },
+      {
+        _id: 9,
+        title: "Sokuon「そくおん」",
+        tag: "[っ・ッ]အသံပေါင်းခြင်း",
+        content: [
+          {
+            _id: 1,
+            title: "တူတဲ့ဗျည်း ၂ခုထပ်တဲ့အခါ  \n＊ [ -kk, -pp, -tt, -ss ]",
+            tag: "ーっ",
+            description:
+              "にっき → ni kki \nいっぱい → i ppai \nおっと → o tto \nざっし → za sshi",
+          },
+        ],
+      },
+      {
+        _id: 10,
         title: "Chouon「ちょうおん」",
         tag: "အသံရှည်/အသံစွဲ",
         content: [
@@ -336,125 +487,6 @@ export const GET_STARTED = [
         ],
       },
       {
-        _id: 8,
-        title: "Hatsuon「はつおん」",
-        tag: "[ん・ン]အသံပေါင်းခြင်း",
-        content: [
-          {
-            _id: 1,
-            title: "အသံပေါင်းခြင်း",
-            tag: "ーん",
-            description:
-              "うんどう → un dou \nせんろ → sen ro \nみんな → min na \nはんたい → han tai \nしんぶん → shin bun",
-          },
-        ],
-      },
-      {
-        _id: 9,
-        title: "Sokuon「そくおん」",
-        tag: "[っ・ッ]အသံပေါင်းခြင်း",
-        content: [
-          {
-            _id: 1,
-            title: "တူတဲ့ဗျည်း ၂ခုထပ်တဲ့အခါ  \n＊ [ -kk, -pp, -tt, -ss ]",
-            tag: "ーっ",
-            description:
-              "にっき → ni kki \nいっぱい → i ppai \nおっと → o tto \nざっし → za sshi",
-          },
-        ],
-      },
-      {
-        _id: 10,
-        title: "Youon「ようおん」",
-        tag: "[や|ヤ・ゆ｜ユ・よ｜ヨ]အသံပေါင်းခြင်း",
-        table: {
-          example: [
-            {
-              _id: 1,
-              hiragana: "ひゃく",
-              romaji: "hya ku",
-            },
-            {
-              _id: 2,
-              hiragana: "じゅう",
-              romaji: "jyuu",
-            },
-            {
-              _id: 3,
-              hiragana: "びょういん",
-              romaji: "byou in",
-            },
-            {
-              _id: 4,
-              hiragana: "おちゃ",
-              romaji: "o cha",
-            },
-            {
-              _id: 5,
-              hiragana: "りょこう",
-              romaji: "ryo kou",
-            },
-          ],
-          rows: [
-            {
-              _id: 1,
-              hira: ["きゃ", "", "きゅ", "", "きょ"],
-              romaji: ["Kya", "Kyu", "Kyo"],
-            },
-            {
-              _id: 2,
-              hira: ["しゃ", "", "しゅ", "", "しょ"],
-              romaji: ["Sha", "Shu", "Sho"],
-            },
-            {
-              _id: 3,
-              hira: ["ちゃ", "", "ちゅ", "", "ちょ"],
-              romaji: ["Cha", "Chu", "Cho"],
-            },
-            {
-              _id: 4,
-              hira: ["にゃ", "", "にゅ", "", "にょ"],
-              romaji: ["Nya", "Nyu", "Nyo"],
-            },
-            {
-              _id: 5,
-              hira: ["ひゃ", "", "ひゅ", "", "ひょ"],
-              romaji: ["Hya", "Hyu", "Hyo"],
-            },
-            {
-              _id: 6,
-              hira: ["みゃ", "", "みゅ", "", "みょ"],
-              romaji: ["Mya", "Myu", "Myo"],
-            },
-            {
-              _id: 7,
-              hira: ["りゃ", "", "りゅ", "", "りょ"],
-              romaji: ["Rya", "Ryu", "Ryo"],
-            },
-            {
-              _id: 8,
-              hira: ["ぎゃ", "", "ぎゅ", "", "ぎょ"],
-              romaji: ["Gya", "Gyu", "Gyo"],
-            },
-            {
-              _id: 9,
-              hira: ["じゃ", "", "じゅ", "", "じょ"],
-              romaji: ["Ja", "Ju", "Jo"],
-            },
-            {
-              _id: 10,
-              hira: ["びゃ", "", "びゅ", "", "びょ"],
-              romaji: ["Bya", "Byu", "Byo"],
-            },
-            {
-              _id: 11,
-              hira: ["ぴゃ", "", "ぴゅ", "", "ぴょ"],
-              romaji: ["Pya", "Pyu", "Pyo"],
-            },
-          ],
-        },
-      },
-      {
         _id: 11,
         title: "Accent & Intonation",
         tag: "အသံထွက်နှင့်အသံနေအသံထား",
@@ -463,22 +495,19 @@ export const GET_STARTED = [
             _id: 1,
             title: "Intonation",
             tag: "Normal →",
-            description:
-              "あした、ともだちと　おはなみをします。",
+            description: "あした、ともだちと　おはなみをします。",
           },
           {
             _id: 2,
             title: "Intonation",
             tag: "Pitch \u2197",
-            description:
-              "ミラーさんも　いっしょに　いきませんか。",
+            description: "ミラーさんも\u2197 いっしょに\u2197 いきませんか。",
           },
           {
             _id: 3,
             title: "Intonation",
             tag: "Pitch \u2198",
-            description:
-              "ああ、　いいですね。",
+            description: "ああ\u2198、いいですね\u2198。",
           },
         ],
       },

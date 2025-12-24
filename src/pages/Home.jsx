@@ -99,7 +99,7 @@ const Home = () => {
                 ) : lang === "mm" ? (
                   <>ရာသီဥတုသာယာတယ်၊ စာလေ့လာကြမလား?</>
                 ) : (
-                  <>A Beautiful Day, Isn't? Let's learn!</>
+                  <>A Beautiful Day, Isn't it? Let's learn!</>
                 )}
               </Typography>
             </Box>

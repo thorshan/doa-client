@@ -8,11 +8,9 @@ import {
   Divider,
   Chip,
 } from "@mui/material";
-import React from "react";
 import NavbarComponent from "../../components/NavbarComponent";
 import BreadCrumbs from "../../components/BreadCrumbs";
 import {
-  ArrowLeftRounded,
   ArticleRounded,
   ClassRounded,
   HomeRounded,
@@ -20,6 +18,8 @@ import {
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GET_STARTED } from "../../constants/basic";
+import { translations } from "../../constants/translations";
+import { useLanguage } from "../../context/LanguageContext";
 
 const BasicDetails = () => {
   const location = useLocation();
@@ -28,6 +28,7 @@ const BasicDetails = () => {
   const name = location.state?.name;
   const path = location.state?.path;
   const theme = useTheme();
+  const { language } = useLanguage();
 
   // Flatten all lectures for navigation
   const allLectures = GET_STARTED.flatMap((section) => section.description);
@@ -67,7 +68,7 @@ const BasicDetails = () => {
                 />
               ),
               path: "/app",
-              name: "Home",
+              name: translations[language].home,
             },
             {
               icon: (
@@ -156,22 +157,31 @@ const BasicDetails = () => {
                   key={idx}
                   onClick={() => char && speakJP(char)}
                   sx={{
-                    minHeight: 64,
+                    minHeight: 72,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     border: "1px solid",
                     borderColor: "divider",
                     borderRadius: 2,
                     cursor: char ? "pointer" : "default",
-                    fontSize: "1.8rem",
-                    fontWeight: 500,
                     backgroundColor: char ? "background.paper" : "transparent",
-                    whiteSpace: "nowrap",
                     "&:hover": char && { backgroundColor: "action.hover" },
                   }}
                 >
-                  {char || ""}
+                  <Typography
+                    fontWeight={400}
+                    sx={{ fontSize: {xs: "1rem", sm: "1.7rem"} }}
+                  >
+                    {char || ""}
+                  </Typography>
+
+                  {row.romaji[idx] && (
+                    <Typography fontSize="0.75rem" color="text.secondary">
+                      {row.romaji[idx]}
+                    </Typography>
+                  )}
                 </Box>
               ))}
             </Box>
@@ -181,7 +191,7 @@ const BasicDetails = () => {
         {lecture?.table?.example && (
           <>
             <Divider>
-              <Chip label="Example" size="small" />
+              <Chip label={translations[language].example} size="small" />
             </Divider>
 
             <Box
@@ -235,7 +245,7 @@ const BasicDetails = () => {
             disabled={!prevLecture}
             onClick={() => prevLecture && handleNavigate(prevLecture)}
           >
-            Previous
+            {translations[language].previous}
           </Button>
 
           <Button
@@ -248,7 +258,9 @@ const BasicDetails = () => {
               }
             }}
           >
-            {nextLecture ? "Next" : "Finish"}
+            {nextLecture
+              ? translations[language].next
+              : translations[language].finish}
           </Button>
         </Stack>
       </Box>

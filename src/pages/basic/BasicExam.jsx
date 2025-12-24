@@ -18,6 +18,8 @@ import { useNavigate } from "react-router-dom";
 import { HIRAGANA } from "../../constants/hiragana";
 import { KATAKANA } from "../../constants/katakana";
 import ConfettiOverlay from "../../components/ConfettiOverlay";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../constants/translations";
 
 /* ---------------- HELPERS ---------------- */
 const shuffleArray = (arr) => [...arr].sort(() => Math.random() - 0.5);
@@ -32,6 +34,7 @@ const BasicExam = () => {
   const lang = localStorage.getItem("lang");
   const navigate = useNavigate();
   const theme = useTheme();
+  const { language } = useLanguage();
 
   const [checking, setChecking] = useState(true);
   const [ready, setReady] = useState(false);
@@ -135,7 +138,7 @@ const BasicExam = () => {
         fullWidth
         required
         size="small"
-        label="Write in Romaji"
+        label={translations[language].write_romaji}
         value={formData[`q${index}`] || ""}
         onChange={(e) =>
           setFormData({ ...formData, [`q${index}`]: e.target.value })
@@ -165,12 +168,16 @@ const BasicExam = () => {
             <Typography variant="h6" textAlign="center">
               {lang === "jp"
                 ? "テストの準備はできていますか。"
+                : lang === "mm"
+                ? "စမ်းသပ်ဖို့ အဆင်သင့်ဖြစ်ပြီလား?"
                 : "Are you ready to test?"}
             </Typography>
             <Stack direction="row" spacing={2}>
-              <Button onClick={() => navigate(-1)}>Back</Button>
+              <Button onClick={() => navigate(-1)}>
+                {translations[language].go_back}
+              </Button>
               <Button variant="contained" onClick={getReady}>
-                Ready
+                {translations[language].ready}
               </Button>
             </Stack>
           </Stack>
@@ -183,17 +190,29 @@ const BasicExam = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 8, p: 3 }}>
         <Typography variant="h4" mb={2}>
-          🎉 Congratulations!
+          {lang === "jp" ? (
+            <>🎉 おめでとうございます!</>
+          ) : lang === "mm" ? (
+            <>🎉 ဂုဏ်ယူပါတယ်!</>
+          ) : (
+            <>🎉 Congratulations!</>
+          )}
         </Typography>
         <Typography mb={3}>
-          You completed both Hiragana and Katakana exams!
+          {lang === "jp" ? (
+            <>ひらがなとカタカナの両方の試験に合格しました。</>
+          ) : lang === "mm" ? (
+            <>ဟီရာဂနနှင့် ခတခန စာမေးပွဲနှစ်ခုလုံးကို သင်ဖြေဆိုပြီးပါပြီ။</>
+          ) : (
+            <>You completed both Hiragana and Katakana exams.</>
+          )}
         </Typography>
         <Stack spacing={2} direction="row" justifyContent="center">
           <Button variant="contained" onClick={resetExam}>
-            Restart Exam
+            {translations[language].restart_exam}
           </Button>
-          <Button variant="outlined" onClick={() => navigate("/app/basic/finish")}>
-            Finish
+          <Button variant="outlined" onClick={() => navigate("/app")}>
+            {translations[language].finish}
           </Button>
         </Stack>
         {celebrate && <ConfettiOverlay isActive />}
@@ -204,13 +223,15 @@ const BasicExam = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" mb={2}>
-        {mode === "hiragana" ? "Hiragana Exam" : "Katakana Exam"}
+        {mode === "hiragana"
+          ? translations[language].hiragana_exam
+          : translations[language].katakana_exam}
       </Typography>
 
       <Box component="form" onSubmit={submitForm}>
         <Paper sx={{ p: 3, borderRadius: 5 }}>
           <Typography variant="subtitle1" mb={2}>
-            Rewrite the character in Romaji
+            {translations[language].write_hiragana}
           </Typography>
 
           {questions.map(renderInput)}
@@ -221,18 +242,18 @@ const BasicExam = () => {
             fullWidth
             sx={{ mt: 3, borderRadius: 5 }}
           >
-            Check
+            {translations[language].check}
           </Button>
         </Paper>
       </Box>
 
       {/* ================= DIALOG ================= */}
       <Dialog open={openDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Results</DialogTitle>
+        <DialogTitle>{translations[language].results}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", mb: 3 }}>
             <Typography variant="h6" mr={2}>
-              Score
+              {translations[language].score}
             </Typography>
             <Button
               sx={{
@@ -260,18 +281,24 @@ const BasicExam = () => {
             >
               <Box>
                 <Typography variant="caption">
-                  {mode === "hiragana" ? "Hiragana" : "Katakana"}
+                  {mode === "hiragana"
+                    ? translations[language].hiragana
+                    : translations[language].katakana}
                 </Typography>
                 <Typography variant="h6">{q.kana}</Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption">Correct Answer</Typography>
+                <Typography variant="caption">
+                  {translations[language].correct_answer}
+                </Typography>
                 <Typography variant="h6">{q.romaji}</Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption">Your Answer</Typography>
+                <Typography variant="caption">
+                  {translations[language].your_answer}
+                </Typography>
                 <Typography variant="h6">{formData[`q${i}`] || "-"}</Typography>
               </Box>
             </Box>
@@ -279,9 +306,15 @@ const BasicExam = () => {
         </DialogContent>
 
         <DialogActions>
-          {!finished && <Button onClick={resetExam}>Try Again</Button>}
+          {!finished && (
+            <Button onClick={resetExam}>
+              {translations[language].try_again}
+            </Button>
+          )}
           <Button variant="contained" onClick={handleContinue}>
-            {finished && mode === "hiragana" ? "Next" : "Continue"}
+            {finished && mode === "hiragana"
+              ? translations[language].next
+              : translations[language].continue}
           </Button>
         </DialogActions>
       </Dialog>
