@@ -13,7 +13,6 @@ import {
   useMediaQuery,
   Zoom,
   Fab,
-  Card,
   alpha,
 } from "@mui/material";
 import {
@@ -23,7 +22,6 @@ import {
   Brightness7,
   KeyboardArrowUpRounded,
   FacebookOutlined,
-  InstallMobileOutlined,
   Instagram,
   Telegram,
 } from "@mui/icons-material";
@@ -34,9 +32,10 @@ import LanguageToggler from "../components/LangToggler";
 import LanguageTogglerS from "../components/MobileLangToggler";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import { userApi } from "../api/userApi";
 
 const GetStarted = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toggleColorMode } = useColorMode();
   const { language } = useLanguage();
   const theme = useTheme();
@@ -44,6 +43,16 @@ const GetStarted = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const lang = localStorage.getItem("lang");
   const currentTheme = localStorage.getItem("themeMode");
+  const [currentUser, setCurrentUser] = useState(user);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const res = await userApi.getUserData(user?._id);
+      setCurrentUser(res.data);
+    };
+
+    fetchCurrentUser();
+  }, [user?._id]);
 
   const navLinks = [
     { name: translations[language].manual, id: "manual" },
@@ -133,7 +142,7 @@ const GetStarted = () => {
         <Box
           sx={{
             height: 90,
-            px: 4,
+            px: isMobile ? 2 : 10,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -182,7 +191,16 @@ const GetStarted = () => {
                   </Button>
                 </>
               ) : (
-                <Button variant="contained" href="/app">
+                <Button
+                  variant="contained"
+                  href={
+                    isAuthenticated
+                      ? currentUser?.level?.passed?.length > 0
+                        ? "/app"
+                        : "/options"
+                      : "/register"
+                  }
+                >
                   {translations[language].get_started}
                 </Button>
               )}
@@ -236,10 +254,29 @@ const GetStarted = () => {
               )}
             </Button>
             <LanguageTogglerS />
-            <Button href="/register">{translations[language].register}</Button>
-            <Button variant="contained" href="/login">
-              {translations[language].login}
-            </Button>
+            {!isAuthenticated ? (
+              <>
+                <Button href="/register">
+                  {translations[language].register}
+                </Button>
+                <Button variant="contained" href="/login">
+                  {translations[language].login}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="contained"
+                href={
+                  isAuthenticated
+                    ? currentUser?.level?.passed?.length > 0
+                      ? "/app"
+                      : "/options"
+                    : "/register"
+                }
+              >
+                {translations[language].get_started}
+              </Button>
+            )}
           </Stack>
         </Box>
       </Drawer>
@@ -267,7 +304,7 @@ const GetStarted = () => {
       <Box
         sx={{
           height: "90vh",
-          px: 3,
+          px: isMobile ? 2 : 10,
           display: "flex",
           alignItems: "center",
           position: "relative",
@@ -319,7 +356,18 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
+            <Button
+              variant="contained"
+              size="large"
+              sx={{ mt: 3 }}
+              href={
+                isAuthenticated
+                  ? currentUser?.level.passed.length > 0
+                    ? "/app"
+                    : "/options"
+                  : "/register"
+              }
+            >
               ドアヘようこそう
             </Button>
           </Box>
@@ -368,7 +416,18 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
+            <Button
+              variant="contained"
+              size="large"
+              sx={{ mt: 3 }}
+              href={
+                isAuthenticated
+                  ? currentUser?.level?.passed?.length > 0
+                    ? "/app"
+                    : "/options"
+                  : "/register"
+              }
+            >
               စတင်ကြိုးစားမယ်
             </Button>
           </Box>
@@ -417,7 +476,18 @@ const GetStarted = () => {
               </Typography>
             </Typography>
 
-            <Button variant="contained" size="large" sx={{ mt: 3 }} href="/app">
+            <Button
+              variant="contained"
+              size="large"
+              sx={{ mt: 3 }}
+              href={
+                isAuthenticated
+                  ? currentUser?.level.passed.length > 0
+                    ? "/app"
+                    : "/options"
+                  : "/register"
+              }
+            >
               Get Started
             </Button>
           </Box>
@@ -483,7 +553,10 @@ const GetStarted = () => {
       {/* 
           MANUAL SECTION
        */}
-      <Box id="manual" sx={{ scrollMarginTop: "90px", height: "100vh", px: 3 }}>
+      <Box
+        id="manual"
+        sx={{ scrollMarginTop: "90px", height: "100vh", px: isMobile ? 2 : 10 }}
+      >
         <Divider>
           <Typography variant="h5" color="primary">
             {translations[language].manual}
@@ -557,7 +630,10 @@ const GetStarted = () => {
       {/* 
           ABOUT SECTION
        */}
-      <Box id="about" sx={{ scrollMarginTop: "90px", height: "100vh", px: 3 }}>
+      <Box
+        id="about"
+        sx={{ scrollMarginTop: "90px", height: "100vh", px: isMobile ? 2 : 10 }}
+      >
         <Divider>
           <Typography variant="h5" color="primary">
             {translations[language].about}
@@ -632,7 +708,10 @@ const GetStarted = () => {
       </Box>
 
       {/* Apps Section */}
-      <Box id="apps" sx={{ scrollMarginTop: "90px", height: "100vh", px: 3 }}>
+      <Box
+        id="apps"
+        sx={{ scrollMarginTop: "90px", height: "100vh", px: isMobile ? 2 : 10 }}
+      >
         <Divider>
           <Typography variant="h5" color="primary">
             {translations[language].apps}

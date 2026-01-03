@@ -20,6 +20,8 @@ import { KATAKANA } from "../../constants/katakana";
 import ConfettiOverlay from "../../components/ConfettiOverlay";
 import { useLanguage } from "../../context/LanguageContext";
 import { translations } from "../../constants/translations";
+import { userApi } from "../../api/userApi";
+import { useAuth } from "../../context/AuthContext";
 
 /* ---------------- HELPERS ---------------- */
 const shuffleArray = (arr) => [...arr].sort(() => Math.random() - 0.5);
@@ -31,10 +33,12 @@ const pickFive = (data) =>
 
 /* ---------------- COMPONENT ---------------- */
 const BasicExam = () => {
+  const { user } = useAuth();
   const lang = localStorage.getItem("lang");
   const navigate = useNavigate();
   const theme = useTheme();
   const { language } = useLanguage();
+  const level = "Basic";
 
   const [checking, setChecking] = useState(true);
   const [ready, setReady] = useState(false);
@@ -92,7 +96,7 @@ const BasicExam = () => {
   const finished = score === 5;
 
   /* ---------------- CONTINUE ---------------- */
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setOpenDialog(false);
 
     if (finished && mode === "hiragana") {
@@ -100,6 +104,7 @@ const BasicExam = () => {
       loadQuestions("katakana");
     } else if (finished && mode === "katakana") {
       setFinishedAll(true);
+      await userApi.updateUserLevel(user._id, {level});
     }
   };
 
@@ -202,7 +207,7 @@ const BasicExam = () => {
           {lang === "jp" ? (
             <>ひらがなとカタカナの両方の試験に合格しました。</>
           ) : lang === "mm" ? (
-            <>ဟီရာဂနနှင့် ခတခန စာမေးပွဲနှစ်ခုလုံးကို သင်ဖြေဆိုပြီးပါပြီ။</>
+            <>ဟီရဂနနှင့် ခတခန စာမေးပွဲနှစ်ခုလုံးကို သင်ဖြေဆိုပြီးပါပြီ။</>
           ) : (
             <>You completed both Hiragana and Katakana exams.</>
           )}

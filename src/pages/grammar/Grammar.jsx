@@ -55,7 +55,11 @@ const Grammar = () => {
   const isBasePath = location.pathname === "/app/grammar";
 
   if (user?.level && isBasePath) {
-    const LevelComponent = getGrammarComponent(user.level, levelMap, N5Grammar);
+    const LevelComponent = getGrammarComponent(
+      user.level?.current,
+      levelMap,
+      N5Grammar
+    );
     return <LevelComponent />;
   }
 

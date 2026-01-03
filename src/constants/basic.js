@@ -257,22 +257,42 @@ export const GET_STARTED = [
           ],
           rows: [
             {
+              _id: 1,
+              hira: ["が", "ぎ", "ぐ", "げ", "ご"],
+              romaji: ["Ga", "Gi", "Gu", "Ge", "Go"],
+            },
+            {
               _id: 2,
+              hira: ["ざ", "じ", "ず", "ぜ", "ぞ"],
+              romaji: ["Za", "Ji", "Zu", "Ze", "Zo"],
+            },
+            {
+              _id: 3,
+              hira: ["だ", "ぢ", "づ", "で", "ど"],
+              romaji: ["Da", "Dzi", "Dzu", "De", "Do"],
+            },
+            {
+              _id: 4,
+              hira: ["ば", "び", "ぶ", "べ", "ぼ"],
+              romaji: ["Ba", "Bi", "Bu", "Be", "Bo"],
+            },
+            {
+              _id: 5,
               hira: ["ガ", "ギ", "グ", "ゲ", "ゴ"],
               romaji: ["Ga", "Gi", "Gu", "Ge", "Go"],
             },
             {
-              _id: 3,
+              _id: 6,
               hira: ["ザ", "ジ", "ズ", "ゼ", "ゾ"],
               romaji: ["Za", "Ji", "Zu", "Ze", "Zo"],
             },
             {
-              _id: 4,
+              _id: 7,
               hira: ["ダ", "ヂ", "ヅ", "デ", "ド"],
               romaji: ["Da", "Dzi", "Dzu", "De", "Do"],
             },
             {
-              _id: 6,
+              _id: 8,
               hira: ["バ", "ビ", "ブ", "ベ", "ボ"],
               romaji: ["Ba", "Bi", "Bu", "Be", "Bo"],
             },

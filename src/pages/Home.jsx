@@ -4,6 +4,9 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { translations } from "../constants/translations";
 import { useLanguage } from "../context/LanguageContext";
 import NavbarComponent from "../components/NavbarComponent";
+import { useEffect, useState } from "react";
+import { userApi } from "../api/userApi";
+import { LockRounded } from "@mui/icons-material";
 
 const Home = () => {
   const { user } = useAuth();
@@ -16,13 +19,23 @@ const Home = () => {
   const hours = now.getHours();
   const checkTime = hours >= 12 ? "PM" : "AM";
   const isHomeIndex = location.pathname === "/app";
+  const [userData, setUser] = useState(user);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await userApi.getUserData(user?._id);
+        setUser(res.data);
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
+
+    fetchUser();
+  }, [user]);
 
   const handleRoutes = (path) => {
-    if (!user?.level) {
-      navigate("/app/level", { state: { from: location.pathname } });
-    } else {
-      navigate(path);
-    }
+    navigate(path);
   };
 
   const cards = [
@@ -90,8 +103,8 @@ const Home = () => {
               </Typography>
               <Typography variant="h4" fontWeight={"bold"}>
                 {lang === "jp"
-                  ? user?.name.split(" ")[0] + " さん"
-                  : user?.name}
+                  ? userData?.name.split(" ")[0] + " さん"
+                  : userData?.name}
               </Typography>
               <Typography variant="subtitle1">
                 {lang === "jp" ? (
@@ -124,8 +137,8 @@ const Home = () => {
               </Typography>
               <Typography variant="h4" fontWeight={"bold"}>
                 {lang === "jp"
-                  ? user?.name.split(" ")[0] + " さん"
-                  : user?.name}
+                  ? userData?.name.split(" ")[0] + " さん"
+                  : userData?.name}
               </Typography>
               <Typography variant="subtitle1">
                 {lang === "jp" ? (
@@ -139,50 +152,6 @@ const Home = () => {
             </Box>
           )}
 
-          {/* Continue Learning Card */}
-          <Box sx={{ px: 3 }}>
-            <Box sx={{ my: 3 }}>
-              <Card
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  p: 2,
-                  borderRadius: 5,
-                }}
-                elevation={6}
-              >
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" fontWeight="bold">
-                    {" "}
-                    Continue Learning{" "}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {" "}
-                    Progress{" "}
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: 1,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: "grey.300",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: "60%",
-                        height: "100%",
-                        backgroundColor: "primary.main",
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </Card>
-            </Box>
-          </Box>
-
           {/* Cards Container */}
           <Box
             sx={{
@@ -190,70 +159,98 @@ const Home = () => {
               gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
               gap: 3,
               px: 3,
+              mt: 3,
             }}
           >
-            {cards.map((card) => (
-              <Card
-                key={card.char}
-                elevation={6}
-                sx={{
-                  borderRadius: 5,
-                  overflow: "hidden",
-                  position: "relative",
-                  backgroundColor: theme.palette.background.paper,
-                  transition: "0.3s",
-                  "&:hover": {
-                    transform: "translateY(-6px)",
-                    boxShadow: theme.shadows[12],
-                  },
-                }}
-              >
-                <CardActionArea
-                  onClick={() => handleRoutes(card.path)}
+            {cards.map((card, index) => {
+              const isUnlocked =
+                (userData?.level?.passed?.length ?? 0) === 0
+                  ? index === 0
+                  : true;
+
+              return (
+                <Card
+                  key={card.char}
+                  elevation={6}
                   sx={{
-                    height: 180,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    position: "relative",
-                    textAlign: "center",
-                    p: 2,
+                    borderRadius: 5,
                     overflow: "hidden",
+                    position: "relative",
+                    opacity: isUnlocked ? 1 : 0.4,
+                    pointerEvents: isUnlocked ? "auto" : "none",
+                    transition: "0.3s",
+                    "&:hover": isUnlocked
+                      ? {
+                          transform: "translateY(-6px)",
+                          boxShadow: theme.shadows[12],
+                        }
+                      : {},
                   }}
                 >
-                  {/* Background character */}
-                  <Typography
-                    variant="h1"
+                  <CardActionArea
+                    onClick={() => isUnlocked && handleRoutes(card.path)}
                     sx={{
-                      position: "absolute",
-                      left: "50%",
-                      top: 0,
-                      transform: "translateX(-30%)",
-                      fontSize: "15rem",
-                      fontWeight: "bold",
-                      color: theme.palette.primary.main,
-                      opacity: 0.1,
-                      pointerEvents: "none",
-                      userSelect: "none",
-                      lineHeight: 1,
-                      whiteSpace: "nowrap",
-                      mt: 3,
+                      height: 180,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      textAlign: "center",
+                      position: "relative",
+                      p: 2,
+                      overflow: "hidden",
                     }}
                   >
-                    {card.char}
-                  </Typography>
+                    {/* Background character */}
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        position: "absolute",
+                        left: "50%",
+                        top: 0,
+                        transform: "translateX(-30%)",
+                        fontSize: "15rem",
+                        fontWeight: "bold",
+                        color: theme.palette.primary.main,
+                        opacity: 0.1,
+                        pointerEvents: "none",
+                        userSelect: "none",
+                        lineHeight: 1,
+                        whiteSpace: "nowrap",
+                        mt: 3,
+                      }}
+                    >
+                      {card.char}
+                    </Typography>
 
-                  {/* Card title */}
-                  <Typography
-                    variant="h5"
-                    fontWeight="bold"
-                    sx={{ position: "relative", zIndex: 1 }}
-                  >
-                    {card.title}
-                  </Typography>
-                </CardActionArea>
-              </Card>
-            ))}
+                    {/* Card title */}
+                    <Typography
+                      variant="h5"
+                      fontWeight="bold"
+                      sx={{ position: "relative", zIndex: 1 }}
+                    >
+                      {card.title}
+                    </Typography>
+                  </CardActionArea>
+
+                  {/* Lock overlay if not unlocked */}
+                  {!isUnlocked && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        bgcolor: "rgba(0,0,0,0.2)",
+                        zIndex: 100,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <LockRounded fontSize="large" color="primary" />
+                    </Box>
+                  )}
+                </Card>
+              );
+            })}
           </Box>
         </>
       )}

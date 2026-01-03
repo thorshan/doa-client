@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 // Pages
@@ -22,11 +22,25 @@ import Card from "../pages/reading/Card";
 import CardDetails from "../pages/reading/CardDetails";
 import Profile from "../pages/user/Profile";
 import EditProfile from "../pages/user/EditProfile";
-import AdminCards from "../pages/admin/Card";
 import NotFound from "../pages/utils/NotFound";
 import BasicDetails from "../pages/basic/BasicDetails";
 import BasicExam from "../pages/basic/BasicExam";
 import Finish from "../pages/basic/Finish";
+import Options from "../pages/Options";
+
+import AdminLayout from "../pages/admin/AdminLayout";
+import AdminCards from "../pages/admin/Card";
+import AdminExams from "../pages/admin/Exam";
+import AdminQuestions from "../pages/admin/Question";
+import AdminLevel from "../pages/admin/Level";
+import AdminKanji from "../pages/admin/Kanji";
+import AdminGrammar from "../pages/admin/Grammar";
+import AdminVocab from "../pages/admin/Vocabulary";
+import AdminModule from "../pages/admin/Module";
+import AdminLesson from "../pages/admin/Lesson";
+import ChapterExam from "../pages/exams/ChapterExam";
+import ExamContainer from "../pages/exams/ExamContainer";
+import VerifyEmail from "../pages/user/VerifyEmail";
 
 const AppRoutes = () => {
   return (
@@ -35,6 +49,14 @@ const AppRoutes = () => {
       <Route path="/" element={<GetStarted />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
+      <Route
+        path="/options"
+        element={
+          <ProtectedRoute>
+            <Options />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ===== Home (Protected) ===== */}
       <Route
@@ -68,9 +90,14 @@ const AppRoutes = () => {
           <Route path="n2" element={<N2Grammar />} />
           <Route path="n1" element={<N1Grammar />} />
           <Route
-            path="courses/:courseId/lectures/:lectureId"
+            path="lectures/:lectureId/pattern/:patternId"
             element={<ChapterDetails />}
           />
+        </Route>
+
+        {/* Exam Routes */}
+        <Route path="exams" element={<ExamContainer />}>
+          <Route path="lecture/:lectureId" element={<ChapterExam />} />
         </Route>
 
         {/* Reading */}
@@ -83,6 +110,7 @@ const AppRoutes = () => {
         {/* User */}
         <Route path=":id">
           <Route path="profile" element={<Profile />} />
+          <Route path="verify" element={<VerifyEmail />} />
           <Route path="profile/edit" element={<EditProfile />} />
         </Route>
       </Route>
@@ -93,11 +121,20 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             {/* Optional AdminLayout */}
-            <AdminCards />
+            <AdminLayout />
           </ProtectedRoute>
         }
       >
         <Route path="cards" element={<AdminCards />} />
+        <Route path="exams" element={<AdminExams />} />
+        <Route path="questions" element={<AdminQuestions />} />
+        <Route path="modules" element={<AdminModule />} />
+        <Route path="lessons" element={<AdminLesson />} />
+        <Route path="levels" element={<AdminLevel />} />
+        <Route path="kanji" element={<AdminKanji />} />
+        <Route path="grammars" element={<AdminGrammar />} />
+        <Route path="users" element={<AdminKanji />} />
+        <Route path="vocabularies" element={<AdminVocab />} />
       </Route>
 
       {/* ===== Error ===== */}

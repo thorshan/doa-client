@@ -101,10 +101,7 @@ const BasicDetails = () => {
         </Typography>
         <Box
           sx={{
-            p: 3,
-            border: 1,
             borderRadius: 5,
-            borderColor: "primary.main",
             my: 3,
           }}
         >
@@ -172,7 +169,7 @@ const BasicDetails = () => {
                 >
                   <Typography
                     fontWeight={400}
-                    sx={{ fontSize: {xs: "1rem", sm: "1.7rem"} }}
+                    sx={{ fontSize: { xs: "1rem", sm: "1.7rem" } }}
                   >
                     {char || ""}
                   </Typography>
@@ -199,7 +196,7 @@ const BasicDetails = () => {
                 p: 3,
                 border: 1,
                 borderRadius: 5,
-                borderColor: "primary.main",
+                borderColor: "divider",
                 my: 3,
               }}
             >
@@ -214,7 +211,7 @@ const BasicDetails = () => {
                       my: 2,
                     }}
                   >
-                    <Typography variant="body1" fontWeight="bold">
+                    <Typography variant="body1">
                       {eg.hiragana}
                     </Typography>
                     <TrendingFlatRounded />

@@ -4,3 +4,8 @@ export const CATEGORY = {
   comedy: "Comedy",
   experience: "Experience",
 };
+
+export const LEVEL_CATEGORY = {
+  jlpt: "JLPT",
+  business: "Business",
+};

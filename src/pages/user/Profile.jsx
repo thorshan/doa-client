@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   alpha,
   Avatar,
@@ -22,27 +22,26 @@ import {
   StarRounded,
   TrendingUpRounded,
   VerifiedRounded,
+  VerifiedUser,
   WorkspacePremiumRounded,
 } from "@mui/icons-material";
 import { userApi } from "../../api/userApi";
 import { API } from "../../constants/API";
 import { LEVEL } from "../../constants/level";
+import { useAuth } from "../../context/AuthContext";
+import VerifyEmail from "./VerifyEmail";
 
 const Profile = () => {
-  const location = useLocation();
+  const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const [user, setUserData] = useState({});
+  const [userData, setUserData] = useState({});
   const theme = useTheme();
-  const langLevel = Object.keys(LEVEL).map((lang) => LEVEL[lang]);
-  const userCurrent = Object.keys(LEVEL)
-    .map((lang) => LEVEL[lang])
-    .indexOf(user?.level);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await userApi.getUser(location.state?.id);
+        const res = await userApi.getUser(user._id);
         setUserData(res.data);
       } catch (error) {
         console.error("Error loading profile data", error);
@@ -55,6 +54,12 @@ const Profile = () => {
     e.preventDefault();
     navigate(-1);
   };
+
+  const langLevel = Object.keys(LEVEL).map((lang) => LEVEL[lang]);
+
+  const userCurrent = langLevel.indexOf(userData?.level?.current);
+  const safeTabValue = userCurrent >= 0 ? userCurrent : 0;
+  const passedLevels = userData?.level?.passed ?? [];
 
   return (
     <Box sx={{ p: { sm: 3, xs: 2 } }}>
@@ -97,10 +102,10 @@ const Profile = () => {
         }}
       >
         <Avatar
-          src={`${API}${user.image?.filePath}`}
+          src={`${API}${userData.image?.filePath}`}
           sx={{ width: 80, height: 80, fontSize: 45 }}
         >
-          {user.name?.[0]}
+          {userData.name?.[0]}
         </Avatar>
         <Box
           sx={{
@@ -112,14 +117,31 @@ const Profile = () => {
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Typography variant="h6" fontWeight={"bold"}>
-              {user?.name}
+              {userData?.name}
             </Typography>
+            {userData.isEmailVerified ? (
+              <VerifiedUser color="primary" sx={{ ml: 2 }} />
+            ) : (
+              <Button
+                href={`/app/${user._id}/verify`}
+                sx={{
+                  border: 0.5,
+                  py: 0,
+                  borderRadius: 5,
+                  borderStyle: "dashed",
+                  ml: 2,
+                }}
+              >
+                Verify Email
+              </Button>
+            )}
+
             <VerifiedRounded color="primary" sx={{ ml: 1 }} />
           </Box>
-          <Typography variant="caption">{user?.email}</Typography>
+          <Typography variant="caption">{userData?.email}</Typography>
           <Typography variant="caption">
             {"@"}
-            {user?.username}
+            {userData?.username}
           </Typography>
         </Box>
       </Box>
@@ -130,62 +152,57 @@ const Profile = () => {
               {translations[language].japanese_level}
             </Typography>
             <Tabs
-              value={userCurrent}
-              variant="scrollable"
+              value={safeTabValue}
               scrollButtons={false}
+              variant="scrollable"
               allowScrollButtonsMobile
               TabIndicatorProps={{ style: { display: "none" } }}
               sx={{
                 mt: 1,
                 "& .MuiTabs-scroller": {
                   overflowY: "none",
-                  py: 1.5
+                  py: 1.5,
                 },
               }}
             >
               {langLevel.map((lang, index) => (
                 <Badge
-                  key={index}
-                  badgeContent={<StarRounded fontSize="small"/>}
-                  color="primary"
+                  key={lang}
+                  color="action.active"
                   overlap="circular"
+                  badgeContent={
+                    passedLevels.includes(lang) ? (
+                      <StarRounded fontSize="small" />
+                    ) : (
+                      0
+                    )
+                  }
                 >
                   <Tab
-                    key={index}
                     label={lang}
                     icon={
-                      userCurrent === index ? (
-                        <TrendingUpRounded />
-                      ) : userCurrent > index ? (
+                      passedLevels.includes(lang) ? (
                         <WorkspacePremiumRounded />
+                      ) : safeTabValue === index ? (
+                        <TrendingUpRounded />
                       ) : (
                         <DoDisturb />
                       )
                     }
                     iconPosition="end"
-                    disabled={userCurrent < index}
+                    disabled={safeTabValue < index}
                     sx={{
                       textTransform: "none",
-                      border: 1,
-                      borderColor: "primary.main",
                       borderRadius: 5,
                       px: 2,
                       py: 0.5,
                       minHeight: 40,
                       mr: 1,
                       backgroundColor:
-                        userCurrent === index
-                          ? alpha(theme.palette.primary.main, 0.3)
+                        safeTabValue === index
+                          ? alpha(theme.palette.primary.main, 1)
                           : alpha(theme.palette.action.hover, 0.1),
-                      color:
-                        userCurrent === index ? "text.primary" : "text.primary",
-                      fontWeight: userCurrent === index ? 600 : 400,
-                      "&:hover": {
-                        bgcolor:
-                          userCurrent === index
-                            ? "primary.dark"
-                            : "action.hover",
-                      },
+                      fontWeight: safeTabValue === index ? 600 : 400,
                     }}
                   />
                 </Badge>

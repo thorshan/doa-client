@@ -25,6 +25,10 @@ const Register = () => {
     email: "",
     password: "",
     username: "",
+    level: {
+      passed: [],
+      current: "Basic",
+    }
   });
 
   const autoGenerateUsername = Math.random().toString(2, 12).substring(2, 12);

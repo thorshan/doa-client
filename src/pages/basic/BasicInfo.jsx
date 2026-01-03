@@ -13,11 +13,14 @@ import { GET_STARTED } from "../../constants/basic";
 import { useLocation, useNavigate } from "react-router-dom";
 import NavbarComponent from "../../components/NavbarComponent";
 import BreadCrumbs from "../../components/BreadCrumbs";
+import { translations } from "../../constants/translations";
+import { useLanguage } from "../../context/LanguageContext";
 
 const BasicInfo = () => {
   const [expanded, setExpanded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const {language} = useLanguage();
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -53,7 +56,7 @@ const BasicInfo = () => {
       </Box>
       <Box sx={{ px: 3 }}>
         <Typography variant="h5" sx={{ my: 3 }}>
-          Table Of Content
+          {translations[language].table_content}
         </Typography>
         <Box sx={{ my: 3 }}>
           <Paper sx={{ borderRadius: 5, overflow: "hidden" }}>
