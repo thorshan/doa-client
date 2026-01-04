@@ -7,7 +7,7 @@ import {
   Paper,
   Box,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExpandMore, LockRounded } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { lessonApi } from "../api/lessonApi";
@@ -19,7 +19,11 @@ const LectureComponent = () => {
   const [progress, setProgress] = useState([]);
   const navigate = useNavigate();
 
+  /* ================= FETCH ================= */
+
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
         const [lectureRes, progressRes] = await Promise.all([
@@ -27,36 +31,71 @@ const LectureComponent = () => {
           progressApi.getProgress(),
         ]);
 
-        setLectures(lectureRes.data);
-        setProgress(progressRes.data);
+        if (!isMounted) return;
+
+        setLectures(Array.isArray(lectureRes?.data) ? lectureRes.data : []);
+        setProgress(Array.isArray(progressRes?.data) ? progressRes.data : []);
       } catch (error) {
-        console.error(error);
+        console.error("LectureComponent fetch error:", error);
+        if (isMounted) {
+          setLectures([]);
+          setProgress([]);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  /* ================= OPTIMIZED LOOKUPS ================= */
+
+  const progressMap = useMemo(() => {
+    const map = new Map();
+    for (const p of progress) {
+      if (p?.lecture) {
+        map.set(p.lecture, p);
+      }
+    }
+    return map;
+  }, [progress]);
+
+  const unlockedLectureIds = useMemo(() => {
+    const unlocked = new Set();
+
+    lectures.forEach((lecture, index) => {
+      if (index === 0) {
+        unlocked.add(lecture._id);
+        return;
+      }
+
+      const prevLectureId = lectures[index - 1]?._id;
+      const prevProgress = progressMap.get(prevLectureId);
+
+      if (prevProgress?.testPassed === true) {
+        unlocked.add(lecture._id);
+      }
+    });
+
+    return unlocked;
+  }, [lectures, progressMap]);
+
+  /* ================= HANDLERS ================= */
 
   const handleChange = (panel) => (_, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
 
-  const isLectureUnlocked = (index) => {
-    if (index === 0) return true;
-
-    const prevLectureId = lectures[index - 1]?._id;
-    const prevProgress = progress.find(
-      (p) => p.lecture === prevLectureId
-    );
-
-    return prevProgress?.testPassed === true;
-  };
+  /* ================= RENDER ================= */
 
   return (
     <Paper sx={{ borderRadius: 5, overflow: "hidden" }}>
       <Stack spacing={1}>
-        {lectures.map((lecture, index) => {
-          const unlocked = isLectureUnlocked(index);
+        {lectures.map((lecture) => {
+          const unlocked = unlockedLectureIds.has(lecture._id);
 
           return (
             <Accordion

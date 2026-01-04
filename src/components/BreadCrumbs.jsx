@@ -1,6 +1,5 @@
 import { NavigateNextRounded } from "@mui/icons-material";
-import { Breadcrumbs, Button, Link, Paper, Typography } from "@mui/material";
-import React from "react";
+import { Breadcrumbs, Link, Paper, Typography } from "@mui/material";
 
 const BreadCrumbs = ({ items }) => {
   return (
@@ -12,14 +11,16 @@ const BreadCrumbs = ({ items }) => {
       >
         {items.map((item, index) => (
           <Link
-          underline="none"
+            underline="none"
             key={index}
             sx={{ display: "flex", alignItems: "center" }}
             color="inherit"
             href={item.path}
           >
             {item.icon}
-            <Typography variant="caption" sx={{lineHeight: 1}}>{item.name}</Typography>
+            <Typography variant="caption" sx={{ lineHeight: 1 }}>
+              {item.name}
+            </Typography>
           </Link>
         ))}
       </Breadcrumbs>

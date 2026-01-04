@@ -1,4 +1,4 @@
-import { alpha, Box, Button, Typography, useTheme } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { translations } from "../constants/translations";
 import { useLanguage } from "../context/LanguageContext";
@@ -11,7 +11,6 @@ const Options = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang = localStorage.getItem("lang");
-  const theme = useTheme();
   const [userData, setUser] = useState({ user });
   const level = "Basic";
 
@@ -71,7 +70,7 @@ const Options = () => {
           border: 1,
           borderColor: "primary.main",
           borderRadius: 5,
-          p: 3,
+          p: 2,
         }}
       >
         <Typography variant="h5" fontWeight="bold">
@@ -88,16 +87,15 @@ const Options = () => {
         >
           <Box
             sx={{
+              p: 1,
               border: 1,
               borderColor: "primary.main",
               borderRadius: 5,
-              minWidth: 200,
+              width: "50%",
               backgroundColor: "background.default",
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: 90,
-              p: 2,
+              alignItems: "center",
+              justifyContent: "center",
               cursor: "pointer",
               "&:hover": {
                 boxShadow: 3,
@@ -108,7 +106,7 @@ const Options = () => {
             component={"button"}
             onClick={handleBeginner}
           >
-            <Typography variant="h6" color="text.primary">
+            <Typography variant="subtitle1" color="text.primary">
               {lang === "jp" ? (
                 <>完全な初心者</>
               ) : lang === "mm" ? (
@@ -117,36 +115,18 @@ const Options = () => {
                 <>Absolute Beginer</>
               )}
             </Typography>
-            <Typography
-              variant="caption"
-              color="primary"
-              sx={{
-                p: 1.5,
-                backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                borderRadius: 5,
-              }}
-            >
-              {lang === "jp" ? (
-                <>基礎から学び始めます</>
-              ) : lang === "mm" ? (
-                <>အခြေခံအကျဆုံးကနေစပြီး သင်ယူရမှာဖြစ်ပါတယ်</>
-              ) : (
-                <>You will start learning from the very basic</>
-              )}
-            </Typography>
           </Box>
           <Box
             sx={{
+              p: 1,
               border: 1,
               borderColor: "primary.main",
               borderRadius: 5,
-              minWidth: 200,
+              width: "50%",
               backgroundColor: "background.default",
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: 90,
-              p: 2,
+              alignItems: "center",
+              justifyContent: "center",
               cursor: "pointer",
               "&:hover": {
                 boxShadow: 3,
@@ -157,30 +137,13 @@ const Options = () => {
             component={"button"}
             onClick={handleBasic}
           >
-            <Typography variant="h6" color="text.primary">
+            <Typography variant="subtitle1" color="text.primary">
               {lang === "jp" ? (
                 <>基本的なことは知っている</>
               ) : lang === "mm" ? (
                 <>အခြေခံကိုနားလည်ပါတယ်</>
               ) : (
                 <>Know Basic</>
-              )}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="primary"
-              sx={{
-                p: 1.5,
-                backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                borderRadius: 5,
-              }}
-            >
-              {lang === "jp" ? (
-                <>基礎から学び始めます</>
-              ) : lang === "mm" ? (
-                <>N5 ကနေစပြီး သင်ယူရမှာဖြစ်ပါတယ်</>
-              ) : (
-                <>You will start learning from N5 level</>
               )}
             </Typography>
           </Box>

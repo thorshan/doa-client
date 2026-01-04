@@ -13,6 +13,14 @@ const SelectOption = () => {
     navigate(-1);
   };
 
+  // Handle Routes
+  const handleMoji = () => {
+    navigate("/app/moji-goi/moji");
+  };
+  const handleGoi = () => {
+    navigate("/app/moji-goi/goi");
+  };
+
   return (
     <Box
       sx={{
@@ -51,6 +59,7 @@ const SelectOption = () => {
         >
           <Box
             sx={{
+              color: "text.primary",
               border: 1,
               borderColor: "primary.main",
               borderRadius: 5,
@@ -67,11 +76,14 @@ const SelectOption = () => {
                 transition: "0.3s",
               },
             }}
+            component={"button"}
+            onClick={handleMoji}
           >
             {translations[language].moji}
           </Box>
           <Box
             sx={{
+              color: "text.primary",
               border: 1,
               borderColor: "primary.main",
               borderRadius: 5,
@@ -88,6 +100,8 @@ const SelectOption = () => {
                 transition: "0.3s",
               },
             }}
+            component={"button"}
+            onClick={handleGoi}
           >
             {translations[language].goi}
           </Box>

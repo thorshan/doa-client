@@ -41,6 +41,8 @@ import AdminLesson from "../pages/admin/Lesson";
 import ChapterExam from "../pages/exams/ChapterExam";
 import ExamContainer from "../pages/exams/ExamContainer";
 import VerifyEmail from "../pages/user/VerifyEmail";
+import Kanji from "../pages/vocab/Kanji";
+import Vocab from "../pages/vocab/Vocab";
 
 const AppRoutes = () => {
   return (
@@ -80,6 +82,8 @@ const AppRoutes = () => {
         {/* Vocab */}
         <Route path="moji-goi">
           <Route path="options" element={<SelectOption />} />
+          <Route path="moji" element={<Kanji />} />
+          <Route path="goi" element={<Vocab />} />
         </Route>
 
         {/* Grammar */}
