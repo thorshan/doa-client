@@ -45,21 +45,16 @@ const LectureComponent = () => {
     };
 
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => (isMounted = false);
   }, []);
 
-  /* ================= OPTIMIZED LOOKUPS ================= */
+  /* ================= PROGRESS LOOKUP ================= */
 
   const progressMap = useMemo(() => {
     const map = new Map();
-    for (const p of progress) {
-      if (p?.lecture) {
-        map.set(p.lecture, p);
-      }
-    }
+    progress.forEach((p) => {
+      if (p?.lecture) map.set(p.lecture, p);
+    });
     return map;
   }, [progress]);
 
@@ -75,7 +70,7 @@ const LectureComponent = () => {
       const prevLectureId = lectures[index - 1]?._id;
       const prevProgress = progressMap.get(prevLectureId);
 
-      if (prevProgress?.testPassed === true) {
+      if (prevProgress?.testPassed) {
         unlocked.add(lecture._id);
       }
     });
@@ -88,6 +83,35 @@ const LectureComponent = () => {
   const handleChange = (panel) => (_, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
+
+  const renderItem = ({ title, locked, onClick }) => (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        cursor: locked ? "not-allowed" : "pointer",
+        opacity: locked ? 0.6 : 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        "&:hover": {
+          backgroundColor: locked ? "transparent" : "action.hover",
+        },
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (locked) return;
+        onClick();
+      }}
+    >
+      <Typography fontWeight={500}>{title}</Typography>
+
+      {locked && <LockRounded fontSize="small" />}
+    </Paper>
+  );
 
   /* ================= RENDER ================= */
 
@@ -104,70 +128,60 @@ const LectureComponent = () => {
               onChange={handleChange(lecture._id)}
               sx={{ "&::before": { display: "none" } }}
             >
-              <AccordionSummary expandIcon={<ExpandMore />} sx={{ px: 2, py: 1.5 }}>
-                <Typography fontWeight={600}>
-                  {lecture.title}
-                </Typography>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography fontWeight={600}>{lecture.title}</Typography>
               </AccordionSummary>
 
-              <AccordionDetails sx={{ px: 2, pb: 2 }}>
-                <Stack spacing={1.5}>
+              <AccordionDetails>
+                <Stack spacing={2}>
+                  {lecture.speaking && (
+                    <>
+                      <Typography fontWeight={600}>
+                        {lecture.speaking.title}
+                      </Typography>
+
+                      {renderItem({
+                        title: lecture.speaking.description,
+                        locked: !unlocked,
+                        onClick: () =>
+                          navigate(
+                            `/app/grammar/lectures/${lecture._id}/speaking/${lecture?.speaking?._id}`,
+                            {
+                              state: {
+                              lectureId: lecture._id,
+                              speakingId: lecture?.speaking?._id,
+                            },
+                            }
+                          ),
+                      })}
+                    </>
+                  )}
+
+                  {/* ================= GRAMMAR ================= */}
+                  <Typography fontWeight={600}>Grammar</Typography>
+
                   {lecture.grammarPatterns?.length === 0 && (
                     <Typography variant="caption" color="text.secondary">
                       No grammar available
                     </Typography>
                   )}
 
-                  {lecture.grammarPatterns?.filter(Boolean).map((g) => {
-                    const disabled = !unlocked;
-
-                    return (
-                      <Paper
-                        key={g._id}
-                        elevation={0}
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          border: "1px solid",
-                          borderColor: "divider",
-                          cursor: disabled ? "not-allowed" : "pointer",
-                          opacity: disabled ? 0.6 : 1,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          "&:hover": {
-                            backgroundColor: disabled
-                              ? "transparent"
-                              : "action.hover",
-                          },
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (disabled) return;
-
-                          navigate(
-                            `/app/grammar/lectures/${lecture._id}/pattern/${g._id}`,
-                            {
-                              state: {
-                                lectureId: lecture._id,
-                                grammarId: g._id,
-                              },
-                            }
-                          );
-                        }}
-                      >
-                        <Typography fontWeight={500}>
-                          {g.structure}
-                        </Typography>
-
-                        {disabled && (
-                          <Box display="flex" alignItems="center" gap={0.5}>
-                            <LockRounded fontSize="small" />
-                          </Box>
-                        )}
-                      </Paper>
-                    );
-                  })}
+                  {lecture.grammarPatterns?.map((g) =>
+                    renderItem({
+                      title: g.structure,
+                      locked: !unlocked,
+                      onClick: () =>
+                        navigate(
+                          `/app/grammar/lectures/${lecture._id}/pattern/${g._id}`,
+                          {
+                            state: {
+                              lectureId: lecture._id,
+                              grammarId: g._id,
+                            },
+                          }
+                        ),
+                    })
+                  )}
                 </Stack>
               </AccordionDetails>
             </Accordion>

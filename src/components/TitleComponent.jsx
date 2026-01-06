@@ -16,6 +16,7 @@ import ModuleComponent from "./froms/ModuleComponent";
 import LessonComponent from "./froms/LessonComponent";
 import ExamComponent from "./froms/ExamComponent";
 import QuestionComponent from "./froms/QuestionComponent";
+import SpeakingComponent from "./froms/SpeakingComponent";
 
 const TitleComponent = () => {
   const location = useLocation();
@@ -76,6 +77,7 @@ const TitleComponent = () => {
       {path === "kanji" && <KanjiComponent action={openDialog} toggle={closeHandler} />}
       {path === "grammars" && <GrammarComponent action={openDialog} toggle={closeHandler} />}
       {path === "vocabularies" && <VocabComponent action={openDialog} toggle={closeHandler} />}
+      {path === "speakings" && <SpeakingComponent action={openDialog} toggle={closeHandler} />}
     </Box>
   );
 };

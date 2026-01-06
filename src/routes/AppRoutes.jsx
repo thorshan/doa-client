@@ -27,6 +27,12 @@ import BasicDetails from "../pages/basic/BasicDetails";
 import BasicExam from "../pages/basic/BasicExam";
 import Finish from "../pages/basic/Finish";
 import Options from "../pages/Options";
+import Kanji from "../pages/vocab/Kanji";
+import Vocab from "../pages/vocab/Vocab";
+import VerifyEmail from "../pages/user/VerifyEmail";
+import ChapterExam from "../pages/exams/ChapterExam";
+import ExamContainer from "../pages/exams/ExamContainer";
+import SpeakingDetails from "../pages/grammar/SpeakingDetails";
 
 import AdminLayout from "../pages/admin/AdminLayout";
 import AdminCards from "../pages/admin/Card";
@@ -38,11 +44,7 @@ import AdminGrammar from "../pages/admin/Grammar";
 import AdminVocab from "../pages/admin/Vocabulary";
 import AdminModule from "../pages/admin/Module";
 import AdminLesson from "../pages/admin/Lesson";
-import ChapterExam from "../pages/exams/ChapterExam";
-import ExamContainer from "../pages/exams/ExamContainer";
-import VerifyEmail from "../pages/user/VerifyEmail";
-import Kanji from "../pages/vocab/Kanji";
-import Vocab from "../pages/vocab/Vocab";
+import AdminSpeaking from "../pages/admin/Speaking";
 
 const AppRoutes = () => {
   return (
@@ -97,6 +99,10 @@ const AppRoutes = () => {
             path="lectures/:lectureId/pattern/:patternId"
             element={<ChapterDetails />}
           />
+          <Route
+            path="lectures/:lectureId/speaking/:speakingId"
+            element={<SpeakingDetails />}
+          />
         </Route>
 
         {/* Exam Routes */}
@@ -139,6 +145,7 @@ const AppRoutes = () => {
         <Route path="grammars" element={<AdminGrammar />} />
         <Route path="users" element={<AdminKanji />} />
         <Route path="vocabularies" element={<AdminVocab />} />
+        <Route path="speakings" element={<AdminSpeaking />} />
       </Route>
 
       {/* ===== Error ===== */}

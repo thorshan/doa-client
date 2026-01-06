@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import { CheckBox, Close, Square } from "@mui/icons-material";
 import { grammarApi } from "../../api/grammarApi";
+import { speakingApi } from "../../api/speakingApi";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,6 +37,7 @@ const LessonComponent = ({ action, toggle }) => {
   const [kanjis, setKanjis] = useState([]);
   const [grammars, setGrammars] = useState([]);
   const [vocabularies, setVocabularies] = useState([]);
+  const [speakings, setSpeakings] = useState([]);
   const [form, setForm] = useState({
     title: "",
     level: "",
@@ -43,84 +45,19 @@ const LessonComponent = ({ action, toggle }) => {
     grammarPatterns: [],
     kanji: [],
     vocabulary: [],
+    speaking: null,
     examples: [],
     contentBlocks: null,
   });
 
   // Fetch Levels, Modules, Kanjis, Vocabularies
-  const fetchGrammar = async () => {
-    setLoading(true);
-    try {
-      const res = await grammarApi.getAllGrammar();
-      setGrammars(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
   useEffect(() => {
-    fetchGrammar();
-  }, []);
-
-  const fetchKanji = async () => {
-    setLoading(true);
-    try {
-      const res = await kanjiApi.getAllKanji();
-      setKanjis(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchKanji();
-  }, []);
-
-  const fetchModules = async () => {
-    setLoading(true);
-    try {
-      const res = await moduleApi.getAllModules();
-      setModules(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchModules();
-  }, []);
-
-  const fetchLevels = async () => {
-    setLoading(true);
-    try {
-      const res = await levelApi.getAllLevel();
-      setLevels(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchLevels();
-  }, []);
-
-  const fetchVocabularies = async () => {
-    setLoading(true);
-    try {
-      const res = await vocabApi.getAllVocab();
-      setVocabularies(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchVocabularies();
+    levelApi.getAllLevel().then((r) => setLevels(r.data));
+    moduleApi.getAllModules().then((r) => setModules(r.data));
+    grammarApi.getAllGrammar().then((r) => setGrammars(r.data));
+    kanjiApi.getAllKanji().then((r) => setKanjis(r.data));
+    vocabApi.getAllVocab().then((r) => setVocabularies(r.data));
+    speakingApi.getAllSpeaking().then((r) => setSpeakings(r.data));
   }, []);
 
   // Handle Submit
@@ -331,6 +268,16 @@ const LessonComponent = ({ action, toggle }) => {
               )}
             />
           </FormControl>
+          <Autocomplete
+            sx={{ mt: 2 }}
+            options={speakings}
+            value={form.speaking}
+            getOptionLabel={(o) => o.description}
+            onChange={(e, v) => setForm({ ...form, speaking: v })}
+            renderInput={(params) => (
+              <TextField {...params} label="Related Vocabulary" />
+            )}
+          />
         </Box>
       </Dialog>
     </React.Fragment>

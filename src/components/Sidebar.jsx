@@ -106,6 +106,12 @@ const Sidebar = () => {
       path: "/admin/grammars",
     },
     {
+      text: "Speaking",
+      icon: <SentimentDissatisfied />,
+      type: "item",
+      path: "/admin/speakings",
+    },
+    {
       text: "Reports",
       icon: <BarChartIcon />,
       type: "submenu",
