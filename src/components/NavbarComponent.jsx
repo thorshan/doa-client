@@ -1,4 +1,3 @@
-import { API } from "../constants/API";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Avatar, Box, CardMedia, IconButton } from "@mui/material";
@@ -42,7 +41,7 @@ const NavbarComponent = () => {
         <Avatar
           src={
             currentUser?.image
-              ? `${API}${currentUser.image.filePath}`
+              ? `${import.meta.env.VITE_API}${currentUser.image.filePath}`
               : undefined
           }
         >

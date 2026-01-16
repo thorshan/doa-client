@@ -94,7 +94,7 @@ const Settings = () => {
                 alignItems: "center",
               }}
             >
-              <Avatar src={`${API}${currentUser?.image?.filePath}`}>
+              <Avatar src={`${import.meta.env.VITE_API}${currentUser?.image?.filePath}`}>
                 {currentUser?.name?.[0]}
               </Avatar>
               <Typography variant="subtitle1" sx={{ ml: 2 }}>

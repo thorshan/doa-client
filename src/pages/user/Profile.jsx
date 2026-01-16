@@ -26,10 +26,8 @@ import {
   WorkspacePremiumRounded,
 } from "@mui/icons-material";
 import { userApi } from "../../api/userApi";
-import { API } from "../../constants/API";
 import { LEVEL } from "../../constants/level";
 import { useAuth } from "../../context/AuthContext";
-import VerifyEmail from "./VerifyEmail";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -102,7 +100,7 @@ const Profile = () => {
         }}
       >
         <Avatar
-          src={`${API}${userData.image?.filePath}`}
+          src={`${import.meta.env.VITE_API}${userData.image?.filePath}`}
           sx={{ width: 80, height: 80, fontSize: 45 }}
         >
           {userData.name?.[0]}
