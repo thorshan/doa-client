@@ -22,7 +22,6 @@ import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import { API } from "../../constants/API";
 import { userApi } from "../../api/userApi";
 
 const Settings = () => {
