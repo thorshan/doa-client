@@ -170,7 +170,7 @@ const N5Grammar = () => {
         </Typography>
 
         <Box sx={{ my: 3 }}>
-          <LectureComponent />
+          {/* <LectureComponent /> */}
         </Box>
       </Box>
     </Box>

@@ -33,6 +33,7 @@ import LanguageTogglerS from "../components/MobileLangToggler";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import { userApi } from "../api/userApi";
+import { ROLES } from "../constants/roles";
 
 const GetStarted = () => {
   const { isAuthenticated, user } = useAuth();
@@ -109,6 +110,8 @@ const GetStarted = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  console.log(user?.role)
+
   return (
     <Box>
       {/* 
@@ -181,7 +184,13 @@ const GetStarted = () => {
                 )}
               </IconButton>
               <LanguageToggler />
-              {!isAuthenticated ? (
+              {user?.role === ROLES.ADMIN && (
+                <Button href="/admin">
+                  {translations[language].dashboard || "Console"}
+                </Button>
+              )}
+
+              {/* {!isAuthenticated ? (
                 <>
                   <Button href="/register">
                     {translations[language].register}
@@ -203,7 +212,7 @@ const GetStarted = () => {
                 >
                   {translations[language].get_started}
                 </Button>
-              )}
+              )} */}
             </Stack>
           )}
 

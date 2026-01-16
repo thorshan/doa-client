@@ -1,7 +1,16 @@
 import apiClient from "./apiClient";
 
 export const authApi = {
-  login: (data) => apiClient.post("/auth/login", data),
-  register: (data) => apiClient.post("/auth/register", data),
-  logout: () => apiClient.post("/auth/logout"),
+  // Google login
+  googleLogin: (idToken) => apiClient.post("/auth/google", { token: idToken }),
+
+  // Logout
+  logout: () => {
+    const jwt = localStorage.getItem("token");
+    return apiClient.post("/auth/logout", null, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+  },
 };
