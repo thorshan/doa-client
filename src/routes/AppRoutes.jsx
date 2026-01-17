@@ -45,14 +45,14 @@ import AdminVocab from "../pages/admin/Vocabulary";
 import AdminModule from "../pages/admin/Module";
 import AdminLesson from "../pages/admin/Lesson";
 import AdminSpeaking from "../pages/admin/Speaking";
-import Auth from "../pages/auth/Auth";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* ===== Public ===== */}
       <Route path="/" element={<GetStarted />} />
-      <Route path="/authenticate" element={<Auth />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
       <Route
         path="/options"
         element={

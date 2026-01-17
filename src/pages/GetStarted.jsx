@@ -110,7 +110,7 @@ const GetStarted = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  console.log(user?.role)
+  console.log(user?.role);
 
   return (
     <Box>
@@ -263,27 +263,9 @@ const GetStarted = () => {
               )}
             </Button>
             <LanguageTogglerS />
-            {!isAuthenticated ? (
-              <>
-                <Button href="/register">
-                  {translations[language].register}
-                </Button>
-                <Button variant="contained" href="/login">
-                  {translations[language].login}
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="contained"
-                href={
-                  isAuthenticated
-                    ? currentUser?.level?.passed?.length > 0
-                      ? "/app"
-                      : "/options"
-                    : "/register"
-                }
-              >
-                {translations[language].get_started}
+            {user?.role === ROLES.ADMIN && (
+              <Button href="/admin">
+                {translations[language].dashboard || "Console"}
               </Button>
             )}
           </Stack>
@@ -369,13 +351,13 @@ const GetStarted = () => {
               variant="contained"
               size="large"
               sx={{ mt: 3 }}
-              href={
-                isAuthenticated
-                  ? currentUser?.level.passed.length > 0
-                    ? "/app"
-                    : "/options"
-                  : "/register"
-              }
+              // href={
+              //   isAuthenticated
+              //     ? currentUser?.level.passed.length > 0
+              //       ? "/app"
+              //       : "/options"
+              //     : "/register"
+              // }
             >
               ドアヘようこそう
             </Button>
@@ -429,13 +411,13 @@ const GetStarted = () => {
               variant="contained"
               size="large"
               sx={{ mt: 3 }}
-              href={
-                isAuthenticated
-                  ? currentUser?.level?.passed?.length > 0
-                    ? "/app"
-                    : "/options"
-                  : "/register"
-              }
+              // href={
+              //   isAuthenticated
+              //     ? currentUser?.level?.passed?.length > 0
+              //       ? "/app"
+              //       : "/options"
+              //     : "/register"
+              // }
             >
               စတင်ကြိုးစားမယ်
             </Button>
@@ -489,13 +471,13 @@ const GetStarted = () => {
               variant="contained"
               size="large"
               sx={{ mt: 3 }}
-              href={
-                isAuthenticated
-                  ? currentUser?.level.passed.length > 0
-                    ? "/app"
-                    : "/options"
-                  : "/register"
-              }
+              // href={
+              //   isAuthenticated
+              //     ? currentUser?.level.passed.length > 0
+              //       ? "/app"
+              //       : "/options"
+              //     : "/register"
+              // }
             >
               Get Started
             </Button>

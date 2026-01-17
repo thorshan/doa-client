@@ -1,40 +1,137 @@
-import { createContext, useContext, useState } from "react";
+import { useEffect } from "react";
+import { useReducer } from "react";
+import { createContext } from "react";
 import { authApi } from "../api/authApi";
+import { useContext } from "react";
 
 const AuthContext = createContext();
 
+const initState = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  loading: true,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "LOAD_USER":
+      return {
+        ...state,
+        user: action.payload.user || null,
+        token: action.payload.token || null,
+        isAuthenticated: !!action.payload.user,
+        loading: false,
+      };
+
+    case "LOGIN":
+      return {
+        ...state,
+        user: action.payload.user,
+        token: action.payload.token,
+        isAuthenticated: true,
+        loading: false,
+      };
+
+    case "UPDATE_USER":
+      return {
+        ...state,
+        user: action.payload,
+      };
+
+    case "LOGOUT":
+      return {
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      };
+
+    default:
+      return state;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [state, dispatch] = useReducer(reducer, initState);
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
 
-  const isAuthenticated = !!user;
+    if (savedUser && savedToken) {
+      dispatch({
+        type: "LOAD_USER",
+        payload: {
+          user: JSON.parse(savedUser),
+          token: savedToken,
+        },
+      });
+    } else {
+      dispatch({
+        type: "LOAD_USER",
+        payload: {},
+      });
+    }
+  }, []);
 
-  const saveAuth = (userData, jwtToken) => {
-    setUser(userData);
-    setToken(jwtToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", jwtToken);
+  // Register
+  const register = async (data) => {
+    const res = await authApi.register(data);
+    const { token, user } = res.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    dispatch({
+      type: "LOGIN",
+      payload: { token, user },
+    });
+    return res.data;
   };
 
+  // Login
+  const login = async ({ email, password }) => {
+    const res = await authApi.login({ email, password });
+    const { token, user } = res.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    dispatch({
+      type: "LOGIN",
+      payload: { token, user },
+    });
+    return res.data;
+  };
+
+  // Logout
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("user");
     localStorage.removeItem("token");
-    authApi.logout().catch(() => {});
+    localStorage.removeItem("user");
+    dispatch({
+      type: "LOGOUT",
+    });
   };
 
-  const googleLogin = async (idToken) => {
-    const res = await authApi.googleLogin(idToken);
-    saveAuth(res.data.user, res.data.token);
-  };
+  const updateUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+  dispatch({
+    type: "UPDATE_USER",
+    payload: user,
+  });
+};
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, logout, googleLogin }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        logout,
+        register,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
