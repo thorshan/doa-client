@@ -174,6 +174,16 @@ const Grammar = () => {
     setShowModal(true);
   };
 
+  const handleDelete = async () => {
+    try {
+      await grammarApi.deleteGrammar(deleteGrammarId);
+      setShowDeleteModal(false);
+      fetchBaseData();
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   const filteredGrammars = grammars.filter(
     (g) =>
       g.pattern.toLowerCase().includes(search.toLowerCase()) ||
@@ -391,6 +401,34 @@ const Grammar = () => {
           </Stack>
         </Box>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      {showDeleteModal && (
+        <Dialog
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+        >
+          <Box sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h6" gutterBottom>
+              Caution
+            </Typography>
+            <Typography sx={{ mb: 3 }}>
+              Are you sure you want to delete this chapter?
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="center">
+              <Button
+                variant="outlined"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="contained" color="error" onClick={handleDelete}>
+                Delete
+              </Button>
+            </Stack>
+          </Box>
+        </Dialog>
+      )}
 
       {/* Display Cards */}
       <Box
