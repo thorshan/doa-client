@@ -43,8 +43,11 @@ import AdminKanji from "../pages/admin/Kanji";
 import AdminGrammar from "../pages/admin/Grammar";
 import AdminVocab from "../pages/admin/Vocabulary";
 import AdminModule from "../pages/admin/Module";
-import AdminLesson from "../pages/admin/Lesson";
 import AdminSpeaking from "../pages/admin/Speaking";
+import AdminChapter from "../pages/admin/Chapter";
+import AdminRenshuuA from "../pages/admin/RenshuuA";
+import AdminRenshuuB from "../pages/admin/RenshuuB";
+import AdminRenshuuC from "../pages/admin/RenshuuC";
 
 const AppRoutes = () => {
   return (
@@ -136,13 +139,16 @@ const AppRoutes = () => {
         }
       >
         <Route path="cards" element={<AdminCards />} />
+        <Route path="chapters" element={<AdminChapter />} />
         <Route path="exams" element={<AdminExams />} />
         <Route path="questions" element={<AdminQuestions />} />
         <Route path="modules" element={<AdminModule />} />
-        <Route path="lessons" element={<AdminLesson />} />
         <Route path="levels" element={<AdminLevel />} />
         <Route path="kanji" element={<AdminKanji />} />
         <Route path="grammars" element={<AdminGrammar />} />
+        <Route path="renshuua" element={<AdminRenshuuA />} />
+        <Route path="renshuub" element={<AdminRenshuuB />} />
+        <Route path="renshuuc" element={<AdminRenshuuC />} />
         <Route path="users" element={<AdminKanji />} />
         <Route path="vocabularies" element={<AdminVocab />} />
         <Route path="speakings" element={<AdminSpeaking />} />

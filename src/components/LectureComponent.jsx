@@ -10,7 +10,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { ExpandMore, LockRounded } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { lessonApi } from "../api/lessonApi";
 import { progressApi } from "../api/progressApi";
 
 const LectureComponent = () => {
@@ -27,7 +26,6 @@ const LectureComponent = () => {
     const fetchData = async () => {
       try {
         const [lectureRes, progressRes] = await Promise.all([
-          lessonApi.getAllLesson(),
           progressApi.getProgress(),
         ]);
 

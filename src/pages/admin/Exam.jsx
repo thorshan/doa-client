@@ -1,372 +1,321 @@
-import {
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  FormControl,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Slide,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Toolbar,
-  Typography,
-} from "@mui/material";
 import React, { forwardRef, useEffect, useState } from "react";
-import TitleComponent from "../../components/TitleComponent";
-import { examApi } from "../../api/examApi";
-import { translations } from "../../constants/translations";
-import { useLanguage } from "../../context/LanguageContext";
-import { EXAM_TYPES } from "../../constants/exam";
-import { moduleApi } from "../../api/moduleApi";
-import { levelApi } from "../../api/levelApi";
-import { Close, Delete, Edit } from "@mui/icons-material";
-import LoadingComponent from "../../components/LoadingComponent";
-import { lessonApi } from "../../api/lessonApi";
+import {
+  alpha, AppBar, Autocomplete, Box, Button, Card, CardActions, Chip, Dialog,
+  Divider, FormControl, IconButton, InputAdornment, InputLabel, MenuItem,
+  Paper, Select, Slide, Stack, TextField, Toolbar, Typography, useTheme
+} from "@mui/material";
+import {
+  Close, Delete, Edit, Add, Assignment, Search, Timer, 
+  CheckCircleOutline, Warning, HelpOutline, DragIndicator, ListAlt
+} from "@mui/icons-material";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+// API Imports
+import { examApi } from "../../api/examApi";
+import { questionApi } from "../../api/questionApi";
+import { levelApi } from "../../api/levelApi";
+
+// Component Imports
+import TitleComponent from "../../components/TitleComponent";
+import LoadingComponent from "../../components/LoadingComponent";
+
+const Transition = forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
 
 const Exam = () => {
-  const { language } = useLanguage();
-  const [loading, setLoading] = useState(false);
-  const [levels, setLevels] = useState([]);
-  const [modules, setModules] = useState([]);
-  const [lessons, setLessons] = useState([]);
+  const theme = useTheme();
+  
+  // Data States
   const [exams, setExams] = useState([]);
-  const [editExam, setEditExam] = useState(null);
+  const [questionsPool, setQuestionsPool] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // UI States
   const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteExamId, setDeleteExamId] = useState(false);
-  const [form, setForm] = useState({
+  const [editItem, setEditItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteId, setDeleteId] = useState(null);
+
+  const initialForm = {
     title: "",
-    type: "",
+    examType: "Chapter Test",
     level: "",
-    module: "",
-    lesson: "",
-  });
+    questions: [],
+    durationMinutes: 30,
+    passingScorePercentage: 80,
+    description: ""
+  };
+  const [form, setForm] = useState(initialForm);
 
-  // Fetch Exams
-  const fetchExams = async () => {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await examApi.getAllExams();
-      setExams(res.data);
+      const [eRes, qRes, lRes] = await Promise.all([
+        examApi.getAllExams(),
+        questionApi.getAllQuestions(),
+        levelApi.getAllLevel()
+      ]);
+      // Standardized response access: res.data.data
+      setExams(eRes.data.data || []);
+      setQuestionsPool(qRes.data.data || []);
+      setLevels(lRes.data || []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    fetchExams();
-  }, []);
 
-  // Fetch Levels
-  useEffect(() => {
-    const fetchLevel = async () => {
-      try {
-        const res = await levelApi.getAllLevel();
-        setLevels(res.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchLevel();
-  }, []);
-
-  const fetchModules = async () => {
-    setLoading(true);
-    try {
-      const res = await moduleApi.getAllModules();
-      setModules(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditItem(item);
+      setForm({
+        ...item,
+        level: item.level?._id || item.level,
+        questions: item.questions || []
+      });
+    } else {
+      setEditItem(null);
+      setForm(initialForm);
     }
-  };
-  useEffect(() => {
-    fetchModules();
-  }, []);
-
-  const fetchLessons = async () => {
-    setLoading(true);
-    try {
-      const res = await lessonApi.getAllLesson();
-      setLessons(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchLessons();
-  }, []);
-
-  // Handle Edit
-  const handleEdit = (exam) => {
-    setForm({
-      title: exam.title || "",
-      type: exam.type || "",
-      level: exam.level?._id || exam.level || "",
-      module: exam.module?._id || exam.module || "",
-      lesson: exam.lesson?._id || exam.lesson || "",
-    });
-    setEditExam(exam);
     setShowModal(true);
   };
 
-  // Handle Update
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async () => {
     try {
-      await examApi.updateExam(editExam._id, form);
-      fetchExams();
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setShowModal(false);
-      setLoading(false);
-    }
-  };
+      const payload = {
+        ...form,
+        questions: form.questions.map(q => q._id || q)
+      };
 
-  const openDeleteModal = (id) => {
-    setDeleteExamId(id);
-    setShowDeleteModal(true);
+      if (editItem) {
+        await examApi.updateExam(editItem._id, payload);
+      } else {
+        await examApi.createExam(payload);
+      }
+      setShowModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Save error:", error);
+    }
   };
 
   const handleDelete = async () => {
-    if (deleteExamId) {
-      await examApi.deleteExam(deleteExamId);
-      setShowDeleteModal(false);
-      setDeleteExamId(null);
-      fetchExams();
+    try {
+      await examApi.deleteExam(deleteId);
+      setDeleteId(null);
+      fetchData();
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  if (loading) return <LoadingComponent />;
+  // Drag and Drop Logic
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(form.questions);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setForm({ ...form, questions: items });
+  };
+
+  const removeQuestionFromExam = (index) => {
+    const updated = [...form.questions];
+    updated.splice(index, 1);
+    setForm({ ...form, questions: updated });
+  };
+
+  const filteredExams = exams.filter(ex => 
+    ex.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading && exams.length === 0) return <LoadingComponent />;
 
   return (
     <Box>
       <TitleComponent />
 
-      {/*  */}
-      {showModal && (
-        <Dialog
-          component="form"
-          onSubmit={handleSubmit}
-          open={showModal}
-          onClose={() => setShowModal(false)}
-          slots={{ transition: Transition }}
+      {/* Toolbar */}
+      <Stack direction="row" spacing={2} sx={{ mb: 4 }} alignItems="center">
+        <Button 
+          variant="contained" 
+          startIcon={<Add />} 
+          onClick={() => handleOpenModal()}
+          sx={{ borderRadius: 3 }}
         >
-          <AppBar elevation={0} sx={{ position: "sticky" }}>
-            <Toolbar>
-              <IconButton
-                edge="start"
-                color="inherit"
-                onClick={() => setShowModal(false)}
-                aria-label="close"
-              >
-                <Close />
-              </IconButton>
-              <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                {translations[language]?.addExam || "Add Exam"}
-              </Typography>
-              <Button type="submit" color="inherit">
-                {translations[language]?.save || "Save"}
-              </Button>
-            </Toolbar>
-          </AppBar>
-
-          <Box sx={{ p: 3, backgroundColor: "background.paper" }}>
-            <TextField
-              label={translations[language]?.title || "Title"}
-              required
-              fullWidth
-              size="small"
-              margin="normal"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-            />
-
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Exam Type</InputLabel>
-              <Select
-                value={form.type}
-                required
-                label="Exam Type"
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-              >
-                {Object.keys(EXAM_TYPES).map((key) => (
-                  <MenuItem key={key} value={EXAM_TYPES[key]}>
-                    {EXAM_TYPES[key]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Exam Level</InputLabel>
-              <Select
-                value={form.level}
-                required
-                label="Level"
-                onChange={(e) => setForm({ ...form, level: e.target.value })}
-              >
-                {levels.map((lvl) => (
-                  <MenuItem key={lvl._id} value={lvl._id}>
-                    {lvl.code}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Module</InputLabel>
-              <Select
-                value={form.module}
-                required
-                label="Module"
-                onChange={(e) => setForm({ ...form, module: e.target.value })}
-              >
-                {modules.map((mod) => (
-                  <MenuItem key={mod._id} value={mod._id}>
-                    {mod.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Lesson</InputLabel>
-              <Select
-                value={form.lesson}
-                required
-                label="Lesson"
-                onChange={(e) => setForm({ ...form, lesson: e.target.value })}
-              >
-                {lessons.map((lesson) => (
-                  <MenuItem key={lesson._id} value={lesson._id}>
-                    {lesson.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </Dialog>
-      )}
-
-      {showDeleteModal && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-            animation: "fadeIn 0.3s",
+          New Exam Set
+        </Button>
+        <TextField
+          size="small"
+          placeholder="Search exams..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search fontSize="small" />
+              </InputAdornment>
+            ),
           }}
-        >
-          <Paper
-            sx={{
-              p: 4,
-              width: 400,
-              transform: "translateY(-30px)",
-              animation: "slideDown 0.3s forwards",
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6" mb={2}>
-              {translations[language].caution || "Caution"}
-            </Typography>
-            <Typography mb={3}>
-              {translations[language].delete_confirm ||
-                "Are you sure want to delete?"}
-            </Typography>
-            <Box display="flex" justifyContent="center">
-              <Button
-                size="small"
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 2 }}
-                onClick={() => setShowDeleteModal(false)}
-              >
-                {translations[language].cancel || "Cancel"}
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                onClick={handleDelete}
-              >
-                {translations[language].delete || "Delete"}
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-      )}
+          sx={{ width: 300 }}
+        />
+      </Stack>
 
-      <Box sx={{ my: 3 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>No.</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Level</TableCell>
-              <TableCell>Module</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {exams.length > 0 ? (
-              exams.map((exam, index) => (
-                <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{exam.title}</TableCell>
-                  <TableCell>{exam.type}</TableCell>
-                  <TableCell>{exam.level?.code || "N/A"}</TableCell>
-                  <TableCell>{exam.module?.key || "N/A"}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                      <Stack spacing={2} direction={"row"}>
-                        <IconButton onClick={() => handleEdit(exam)}>
-                          <Edit fontSize="small" color="success" />
-                        </IconButton>
-                        <IconButton onClick={() => openDeleteModal(exam._id)}>
-                          <Delete fontSize="small" color="error" />
-                        </IconButton>
-                      </Stack>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6}>No data found.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      {/* Grid */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 3 }}>
+        {filteredExams.map((ex) => (
+          <Card key={ex._id} sx={{ borderRadius: 4 }}>
+            <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="h6" fontWeight="bold">{ex.title}</Typography>
+                <Chip label={ex.level?.code} size="small" color="secondary" />
+              </Stack>
+              <Chip label={ex.examType} size="small" sx={{ mt: 1 }} />
+            </Box>
+            <Box sx={{ p: 2 }}>
+              <Stack spacing={1}>
+                <Typography variant="body2"><ListAlt sx={{ fontSize: 16, mr: 1, verticalAlign: 'text-bottom' }} /> {ex.questions?.length || 0} Questions</Typography>
+                <Typography variant="body2"><Timer sx={{ fontSize: 16, mr: 1, verticalAlign: 'text-bottom' }} /> {ex.durationMinutes} Minutes</Typography>
+              </Stack>
+            </Box>
+            <Divider />
+            <CardActions sx={{ justifyContent: 'flex-end' }}>
+              <IconButton color="primary" onClick={() => handleOpenModal(ex)}><Edit fontSize="small" /></IconButton>
+              <IconButton color="error" onClick={() => setDeleteId(ex._id)}><Delete fontSize="small" /></IconButton>
+            </CardActions>
+          </Card>
+        ))}
       </Box>
+
+      {/* Full Screen Editor */}
+      <Dialog fullScreen open={showModal} onClose={() => setShowModal(false)} TransitionComponent={Transition}>
+        <AppBar sx={{ position: 'relative' }} elevation={0}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={() => setShowModal(false)}><Close /></IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6">
+              {editItem ? "Edit Exam Set" : "Create Exam Set"}
+            </Typography>
+            <Button color="inherit" variant="outlined" onClick={handleSubmit}>Save Exam</Button>
+          </Toolbar>
+        </AppBar>
+
+        <Box sx={{ p: 4, maxWidth: 1000, mx: 'auto', width: '100%' }}>
+          <Stack spacing={4}>
+            {/* Config Section */}
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Typography variant="subtitle2" color="primary" gutterBottom>1. Basic Settings</Typography>
+              <Stack spacing={3} mt={2}>
+                <TextField label="Exam Title" fullWidth value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} />
+                <Stack direction="row" spacing={2}>
+                  <FormControl fullWidth>
+                    <InputLabel>Level</InputLabel>
+                    <Select value={form.level} label="Level" onChange={(e) => setForm({...form, level: e.target.value})}>
+                      {levels.map(l => <MenuItem key={l._id} value={l._id}>{l.code}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth>
+                    <InputLabel>Type</InputLabel>
+                    <Select value={form.examType} label="Type" onChange={(e) => setForm({...form, examType: e.target.value})}>
+                      {["Chapter Test", "Module Final", "Mock JLPT", "Mini Quiz"].map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
+            </Paper>
+
+            {/* Selection Section */}
+            <Box>
+              <Typography variant="subtitle2" color="primary" gutterBottom>2. Add Questions from Bank</Typography>
+              <Autocomplete
+                multiple
+                options={questionsPool}
+                getOptionLabel={(option) => `[${option.category}] ${option.text}`}
+                value={form.questions}
+                isOptionEqualToValue={(opt, val) => opt._id === val._id}
+                onChange={(_, newValue) => setForm({...form, questions: newValue})}
+                renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Search and select questions..." />}
+                renderTags={() => null} // We display them in the Drag & Drop list instead
+              />
+            </Box>
+
+            {/* Drag and Drop List */}
+            <Box>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="primary">3. Reorder Questions (Drag & Drop)</Typography>
+                <Chip label={`${form.questions.length} Selected`} size="small" />
+              </Stack>
+
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="exam-questions">
+                  {(provided) => (
+                    <Stack {...provided.droppableProps} ref={provided.innerRef} spacing={1}>
+                      {form.questions.map((q, index) => (
+                        <Draggable key={q._id} draggableId={q._id} index={index}>
+                          {(provided, snapshot) => (
+                            <Paper
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              elevation={snapshot.isDragging ? 6 : 1}
+                              sx={{
+                                p: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                border: '1px solid',
+                                borderColor: snapshot.isDragging ? 'primary.main' : 'divider',
+                                bgcolor: 'background.paper'
+                              }}
+                            >
+                              <Box {...provided.dragHandleProps} sx={{ mr: 2, display: 'flex' }}>
+                                <DragIndicator color="action" />
+                              </Box>
+                              
+                              <Box sx={{ flexGrow: 1 }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                                  QUESTION {index + 1} • {q.category}
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {q.text}
+                                </Typography>
+                              </Box>
+
+                              <IconButton color="error" size="small" onClick={() => removeQuestionFromExam(index)}>
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Paper>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      {form.questions.length === 0 && (
+                        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderStyle: 'dashed' }}>
+                          <Typography color="text.secondary">No questions selected. Use the search bar above.</Typography>
+                        </Paper>
+                      )}
+                    </Stack>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </Box>
+          </Stack>
+        </Box>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Warning color="error" sx={{ fontSize: 40 }} />
+          <Typography variant="h6">Delete Exam?</Typography>
+          <Typography variant="body2" color="text.secondary">The questions in the bank will not be deleted.</Typography>
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }} justifyContent="center">
+            <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={handleDelete}>Delete</Button>
+          </Stack>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

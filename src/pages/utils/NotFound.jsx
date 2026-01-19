@@ -33,7 +33,7 @@ const NotFound = () => {
             {translations[language]._404txt}
           </Typography>
 
-          <Button variant="contained" sx={{ mt: 3 }} href="/app">
+          <Button variant="contained" sx={{ mt: 3 }} href="/">
             {translations[language].go_back}
           </Button>
         </Box>

@@ -22,16 +22,23 @@ import {
   useTheme,
 } from "@mui/material";
 import React, { forwardRef, useEffect, useState } from "react";
+import {
+  Close,
+  Delete,
+  Edit,
+  Square,
+  CheckBox,
+  Add,
+} from "@mui/icons-material";
 import TitleComponent from "../../components/TitleComponent";
-import { levelApi } from "../../api/levelApi";
-import { kanjiApi } from "../../api/kanjiApi";
-import { useLanguage } from "../../context/LanguageContext";
-import { grammarApi } from "../../api/grammarApi";
-import { Close, Delete, Edit, Square, CheckBox } from "@mui/icons-material";
-import { translations } from "../../constants/translations";
-import RenderFurigana from "../../components/RenderFurigana";
 import LoadingComponent from "../../components/LoadingComponent";
+import RenderFurigana from "../../components/RenderFurigana";
+import { levelApi } from "../../api/levelApi";
+import { chapterApi } from "../../api/chapterApi";
+import { kanjiApi } from "../../api/kanjiApi";
 import { vocabApi } from "../../api/vocabApi";
+import { grammarApi } from "../../api/grammarApi";
+import { useLanguage } from "../../context/LanguageContext";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -41,649 +48,407 @@ const Grammar = () => {
   const theme = useTheme();
   const { language } = useLanguage();
   const [levels, setLevels] = useState([]);
+  const [chapters, setChapters] = useState([]);
   const [kanjis, setKanjis] = useState([]);
   const [vocabularies, setVocabularies] = useState([]);
   const [grammars, setGrammars] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editGrammar, setEditGrammar] = useState(null);
+
   const [showModal, setShowModal] = useState(false);
+  const [editGrammar, setEditGrammar] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteGrammarId, setDeleteGrammarId] = useState(false);
+  const [deleteGrammarId, setDeleteGrammarId] = useState(null);
+
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+
+  // Form state precisely matching your Mongoose Schema
   const [form, setForm] = useState({
-    title: "",
-    structure: "",
-    level: "",
+    pattern: "",
+    chapter: "",
     meaning: "",
-    explanation: "",
-    examples: [],
+    level: "",
     relatedKanji: [],
-    relatedVocabulary: [],
-    tags: [],
+    relatedVocab: [],
+    notes: [], // Array of strings
+    examples: [], // Array of { structure, meaning }
   });
 
-  const wordToFind = [
-    "あの",
-    "この",
-    "これ",
-    "は",
-    "が",
-    "を",
-    "に",
-    "です",
-    "と",
-    "も",
-    "から",
-    "まで",
-    "より",
-    "で",
-    "ですか",
-    "ません",
-    "の",
-    "それ",
-  ];
-
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      // Detects Cmd + K (Mac) or Ctrl + K (Windows/Linux)
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault(); // Prevent browser default behavior
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
         setShowSearch((prev) => !prev);
       }
-
-      // Close on Escape
-      if (event.key === "Escape") {
+      if (e.key === "Escape") {
         setShowSearch(false);
         setSearch("");
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
+    fetchBaseData();
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Fetch Levels
-  const fetchLevels = async () => {
+  const fetchBaseData = async () => {
     setLoading(true);
     try {
-      const res = await levelApi.getAllLevel();
-      setLevels(res.data);
+      const [lvl, ch, kj, vb, gm] = await Promise.all([
+        levelApi.getAllLevel(),
+        chapterApi.getAllChapter(),
+        kanjiApi.getAllKanji(),
+        vocabApi.getAllVocab(),
+        grammarApi.getAllGrammar(),
+      ]);
+      setLevels(lvl.data);
+      setChapters(ch.data.data);
+      setKanjis(kj.data);
+      setVocabularies(vb.data);
+      setGrammars(gm.data.data);
     } catch (error) {
-      console.log(error.message);
+      console.error("Fetch Error:", error);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchLevels();
+    fetchBaseData();
   }, []);
 
-  // Fetch Kanji
-  const fetchKanji = async () => {
-    setLoading(true);
-    try {
-      const res = await kanjiApi.getAllKanji();
-      setKanjis(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchKanji();
-  }, []);
-
-  // Fetch Vocabulary
-  const fetchVocabulary = async () => {
-    setLoading(true);
-    try {
-      const res = await vocabApi.getAllVocab();
-      setVocabularies(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchVocabulary();
-  }, []);
-
-  // Fetch Grammar
-  const fetchGrammar = async () => {
-    setLoading(true);
-    try {
-      const res = await grammarApi.getAllGrammar();
-      setGrammars(res.data);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchGrammar();
-  }, []);
-
-  //
-  const addExample = () => {
+  // Logic for dynamic arrays (Examples & Notes)
+  const addExample = () =>
     setForm({
       ...form,
-      examples: [...form.examples, { jp1: "", jp2: "", mm1: "", mm2: "" }],
+      examples: [...form.examples, { structure: "", meaning: "" }],
     });
+  const updateExample = (idx, key, val) => {
+    const newEx = [...form.examples];
+    newEx[idx][key] = val;
+    setForm({ ...form, examples: newEx });
   };
 
-  //
-  const removeExample = (index) => {
-    const newExapmle = form.examples.filter((_, i) => i !== index);
-    setForm({ ...form, examples: newExapmle });
+  const addNote = () => setForm({ ...form, notes: [...form.notes, ""] });
+  const updateNote = (idx, val) => {
+    const newNotes = [...form.notes];
+    newNotes[idx] = val;
+    setForm({ ...form, notes: newNotes });
   };
 
-  //
-  const updateExampleField = (index, key, value) => {
-    const newExample = [...form.examples];
-    newExample[index][key] = value;
-    setForm({ ...form, examples: newExample });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...form,
+        relatedKanji: form.relatedKanji.map((k) => k._id || k),
+        relatedVocab: form.relatedVocab.map((v) => v._id || v),
+      };
+
+      if (editGrammar) {
+        await grammarApi.updateGrammar(editGrammar._id, payload);
+      } else {
+        await grammarApi.createGrammar(payload);
+      }
+      setShowModal(false);
+      fetchBaseData();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle Edit
   const handleEdit = (grammar) => {
-    setForm({
-      title: grammar.title || "",
-      structure: grammar.structure || "",
-      level: grammar.level?._id || grammar.level || "",
-      meaning: grammar.meaning || "",
-      explanation: grammar.explanation || "",
-      examples: grammar.examples || [],
-      relatedKanji: grammar.relatedKanji?._id || grammar.relatedKanji || [],
-      relatedVocabulary:
-        grammar.relatedVocabulary?._id || grammar.relatedVocabulary || [],
-      tags: grammar.tags || [],
-    });
     setEditGrammar(grammar);
+    setForm({
+      pattern: grammar.pattern || "",
+      chapter: grammar.chapter?._id || grammar.chapter || "",
+      meaning: grammar.meaning || "",
+      level: grammar.level?._id || grammar.level || "",
+      relatedKanji: grammar.relatedKanji || [],
+      relatedVocab: grammar.relatedVocab || [],
+      notes: grammar.notes || [],
+      examples: grammar.examples || [],
+    });
     setShowModal(true);
   };
 
-  // Handle Update
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = {
-      ...form,
-      examples:
-        form.examples !== form.examples
-          ? form.examples.split(",")
-          : form.examples,
-      relatedKanji:
-        form.relatedKanji !== form.relatedKanji
-          ? form.relatedKanji.split(",")
-          : form.relatedKanji,
-      relatedVocabulary:
-        form.relatedVocabulary !== form.relatedVocabulary
-          ? form.relatedVocabulary.split(",")
-          : form.relatedVocabulary,
-    };
-    setLoading(true);
-    try {
-      await grammarApi.updateGrammar(editGrammar._id, formData);
-      fetchGrammar();
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setShowModal(false);
-      setLoading(false);
-    }
-  };
-
-  const openDeleteModal = (id) => {
-    setDeleteGrammarId(id);
-    setShowDeleteModal(true);
-  };
-
-  const handleDelete = async () => {
-    if (deleteGrammarId) {
-      await grammarApi.deleteGrammar(deleteGrammarId);
-      setShowDeleteModal(false);
-      setDeleteGrammarId(null);
-      fetchGrammar();
-    }
-  };
-
-  // Filter Search
   const filteredGrammars = grammars.filter(
-    (grammar) =>
-      grammar.title.toLowerCase().includes(search.toLowerCase()) ||
-      grammar.level?.code.toLowerCase().includes(search.toLowerCase())
+    (g) =>
+      g.pattern.toLowerCase().includes(search.toLowerCase()) ||
+      g.chapter?.index?.toString().includes(search)
   );
 
-  if (loading) return <LoadingComponent />;
+  if (loading && grammars.length === 0) return <LoadingComponent />;
 
   return (
     <Box>
       <TitleComponent />
 
-      {/* Search Bar */}
-      <Box sx={{ py: 2 }}>
+      {/* Search & Actions */}
+      <Stack direction="row" spacing={2} sx={{ py: 2 }} alignItems="center">
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => {
+            setEditGrammar(null);
+            setForm({
+              pattern: "",
+              chapter: "",
+              meaning: "",
+              level: "",
+              relatedKanji: [],
+              relatedVocab: [],
+              notes: [],
+              examples: [],
+            });
+            setShowModal(true);
+          }}
+          sx={{ borderRadius: 4 }}
+        >
+          Add Grammar
+        </Button>
         {showSearch && (
-          <FormControl fullWidth>
-            <TextField
-              color="primary"
-              placeholder="Search"
-              fullWidth
-              autoFocus
-              size="small"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 5,
-                },
-              }}
-              onKeyDownCapture={(e) => e.key === "Escape" && setSearch("")}
-            />
-          </FormControl>
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            placeholder="Search Pattern or Chapter..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 5 } }}
+          />
         )}
-      </Box>
+      </Stack>
 
-      {showModal && (
-        <React.Fragment>
-          <Dialog
-            component={"form"}
-            onSubmit={handleSubmit}
-            open={showModal}
-            onClose={() => setShowModal(false)}
-            slots={{
-              transition: Transition,
-            }}
-          >
-            <AppBar elevation={0} sx={{ position: "sticky" }}>
-              <Toolbar>
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  onClick={() => setShowModal(false)}
-                  aria-label="close"
-                >
-                  <Close />
-                </IconButton>
-                <Typography
-                  sx={{ ml: 2, flex: 1 }}
-                  variant="h6"
-                  component="div"
-                >
-                  Add new data
-                </Typography>
-                <Button type="submit" color="inherit">
-                  Save
-                </Button>
-              </Toolbar>
-            </AppBar>
-            <Box sx={{ p: 3, backgroundColor: "background.paper" }}>
-              <TextField
-                label="Title"
-                color="primary"
-                required
-                fullWidth
-                size="small"
-                margin="normal"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-              />
-              <TextField
-                label="Structure"
-                color="primary"
-                required
-                fullWidth
-                size="small"
-                margin="normal"
-                value={form.structure}
-                onChange={(e) =>
-                  setForm({ ...form, structure: e.target.value })
-                }
-              />
-              <TextField
-                label="meaning"
-                color="primary"
-                required
-                fullWidth
-                size="small"
-                margin="normal"
-                value={form.meaning}
-                onChange={(e) => setForm({ ...form, meaning: e.target.value })}
-              />
-              <TextField
-                label="Explanation"
-                color="primary"
-                required
-                fullWidth
-                size="small"
-                margin="normal"
-                value={form.explanation}
-                onChange={(e) =>
-                  setForm({ ...form, explanation: e.target.value })
-                }
-              />
-              <FormControl fullWidth size="small" margin="normal">
-                <InputLabel htmlFor="level">Level</InputLabel>
+      <Dialog
+        fullScreen
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        TransitionComponent={Transition}
+      >
+        <AppBar sx={{ position: "relative" }} elevation={0}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setShowModal(false)}
+            >
+              <Close />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6">
+              {editGrammar ? "Edit Pattern" : "New Grammar Pattern"}
+            </Typography>
+            <Button color="inherit" onClick={handleSubmit}>
+              Save
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        <Box sx={{ p: 4, maxWidth: 900, mx: "auto", width: "100%" }}>
+          <Stack spacing={3}>
+            <TextField
+              label="Grammar Pattern"
+              fullWidth
+              value={form.pattern}
+              onChange={(e) => setForm({ ...form, pattern: e.target.value })}
+            />
+
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
+                <InputLabel>Level</InputLabel>
                 <Select
-                  labelId="level-label"
-                  label="Level"
                   value={form.level}
-                  required
+                  label="Level"
                   onChange={(e) => setForm({ ...form, level: e.target.value })}
                 >
-                  {levels.map((level) => (
-                    <MenuItem key={level._id} value={level._id}>
-                      {level.code}
+                  {levels.map((l) => (
+                    <MenuItem key={l._id} value={l._id}>
+                      {l.code}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={kanjis}
-                  disableCloseOnSelect
-                  value={form.relatedKanji}
-                  onChange={(event, newValue) => {
-                    setForm({ ...form, relatedKanji: newValue });
-                  }}
-                  getOptionLabel={(option) => option.character}
-                  renderOption={(props, option, { selected }) => {
-                    const { key, ...otherProps } = props;
-                    return (
-                      <li key={key} {...otherProps}>
-                        <Checkbox
-                          icon={<Square size={20} />}
-                          checkedIcon={<CheckBox size={20} />}
-                          style={{ marginRight: 8 }}
-                          checked={selected}
-                        />
-                        {option.character}
-                      </li>
-                    );
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Add Kanji"
-                      placeholder={
-                        form.relatedKanji.length === 0 ? "Search Kanji ..." : ""
-                      }
-                    />
-                  )}
-                />
-              </FormControl>
-              <FormControl fullWidth margin="normal">
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={vocabularies}
-                  disableCloseOnSelect
-                  value={form.relatedVocabulary}
-                  onChange={(event, newValue) => {
-                    setForm({ ...form, relatedVocabulary: newValue });
-                  }}
-                  getOptionLabel={(option) => option.word}
-                  renderOption={(props, option, { selected }) => {
-                    const { key, ...otherProps } = props;
-                    return (
-                      <li key={key} {...otherProps}>
-                        <Checkbox
-                          icon={<Square size={20} />}
-                          checkedIcon={<CheckBox size={20} />}
-                          style={{ marginRight: 8 }}
-                          checked={selected}
-                        />
-                        {option.word}
-                      </li>
-                    );
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Add Related Vocabulary"
-                      placeholder={
-                        form.relatedVocabulary.length === 0
-                          ? "Search Vocabulary ..."
-                          : ""
-                      }
-                    />
-                  )}
-                />
-              </FormControl>
-
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                Examples
-              </Typography>
-              {form.examples.map((g, idx) => (
-                <Paper
-                  elevation={0}
-                  key={idx}
-                  sx={{
-                    mb: 1,
-                    "& .MuiPaper-root": { backgroundColor: "background.paper" },
-                  }}
+              <FormControl fullWidth>
+                <InputLabel>Chapter</InputLabel>
+                <Select
+                  value={form.chapter}
+                  label="Chapter"
+                  onChange={(e) =>
+                    setForm({ ...form, chapter: e.target.value })
+                  }
                 >
-                  <TextField
-                    fullWidth
-                    label="Japanese 1"
-                    value={g.jp1}
-                    size="small"
-                    onChange={(e) =>
-                      updateExampleField(idx, "jp1", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Japanese 2"
-                    value={g.jp2}
-                    size="small"
-                    onChange={(e) =>
-                      updateExampleField(idx, "jp2", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Myanmar 1"
-                    value={g.mm1}
-                    size="small"
-                    onChange={(e) =>
-                      updateExampleField(idx, "mm1", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Myanmar 2"
-                    value={g.mm2}
-                    size="small"
-                    onChange={(e) =>
-                      updateExampleField(idx, "mm2", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  />
-                  <Button
-                    color="error"
-                    size="small"
-                    sx={{ mt: 1 }}
-                    onClick={() => removeExample(idx)}
-                  >
-                    Remove
-                  </Button>
-                </Paper>
-              ))}
+                  {chapters.map((c) => (
+                    <MenuItem key={c._id} value={c._id}>
+                      Chapter {c.index}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
 
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={addExample}
-                sx={{ mb: 2 }}
-              >
-                Add Example
-              </Button>
-            </Box>
-          </Dialog>
-        </React.Fragment>
-      )}
+            <TextField
+              label="Overall Meaning"
+              fullWidth
+              value={form.meaning}
+              onChange={(e) => setForm({ ...form, meaning: e.target.value })}
+            />
 
-      {showDeleteModal && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-            animation: "fadeIn 0.3s",
-          }}
-        >
-          <Paper
-            sx={{
-              p: 4,
-              width: 400,
-              transform: "translateY(-30px)",
-              animation: "slideDown 0.3s forwards",
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6" mb={2}>
-              {translations[language].caution || "Caution"}
-            </Typography>
-            <Typography mb={3}>
-              {translations[language].delete_confirm ||
-                "Are you sure want to delete?"}
-            </Typography>
-            <Box display="flex" justifyContent="center">
-              <Button
-                size="small"
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 2 }}
-                onClick={() => setShowDeleteModal(false)}
-              >
-                {translations[language].cancel || "Cancel"}
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                onClick={handleDelete}
-              >
-                {translations[language].delete || "Delete"}
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-      )}
+            <Autocomplete
+              multiple
+              options={kanjis}
+              getOptionLabel={(o) => o.character}
+              value={form.relatedKanji}
+              onChange={(_, v) => setForm({ ...form, relatedKanji: v })}
+              renderInput={(p) => <TextField {...p} label="Related Kanji" />}
+            />
 
-      {/* Grammar Data */}
-      <Box sx={{ my: 3 }}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-            gap: 2,
-          }}
-        >
-          {filteredGrammars.length > 0 ? (
-            filteredGrammars.map((grammar, index) => (
-              <Card
-                key={index}
+            <Autocomplete
+              multiple
+              options={vocabularies}
+              getOptionLabel={(o) => o.word}
+              value={form.relatedVocab}
+              onChange={(_, v) => setForm({ ...form, relatedVocab: v })}
+              renderInput={(p) => (
+                <TextField {...p} label="Related Vocabulary" />
+              )}
+            />
+
+            <Typography variant="h6">Examples (structure & meaning)</Typography>
+            {form.examples.map((ex, idx) => (
+              <Paper
+                key={idx}
                 sx={{
-                  backgroundColor: "background.paper",
-                  borderRadius: 5,
-                  overflow: "hidden",
+                  p: 2,
+                  bgcolor: "grey.50",
                   display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
+                  gap: 2,
+                  alignItems: "center",
                 }}
               >
-                <Box
-                  sx={{
-                    backgroundColor: alpha(theme.palette.primary.main, 0.9),
-                    p: 2,
-                  }}
+                <TextField
+                  label="Example Structure"
+                  size="small"
+                  fullWidth
+                  value={ex.structure}
+                  onChange={(e) =>
+                    updateExample(idx, "structure", e.target.value)
+                  }
+                />
+                <TextField
+                  label="Meaning"
+                  size="small"
+                  fullWidth
+                  value={ex.meaning}
+                  onChange={(e) =>
+                    updateExample(idx, "meaning", e.target.value)
+                  }
+                />
+                <IconButton
+                  color="error"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      examples: form.examples.filter((_, i) => i !== idx),
+                    })
+                  }
                 >
-                  <Typography variant="subtitle2" sx={{ color: "white" }}>
-                    {grammar.title}
-                  </Typography>
-                </Box>
-                <Box sx={{ mt: 1, px: 2 }}>
-                  <Box sx={{ my: 1 }}>
-                    <Typography variant="body1">
-                      {grammar.structure
-                        .split(new RegExp(`(${wordToFind.join("|")})`, "gi"))
-                        .map((part, index) =>
-                          wordToFind.includes(part) ? (
-                            <Box
-                              component="span"
-                              key={index}
-                              sx={{ color: "primary.main", fontWeight: "bold" }}
-                            >
-                              {part}
-                            </Box>
-                          ) : (
-                            part
-                          )
-                        )}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body1">
-                    <RenderFurigana
-                      text={grammar.explanation}
-                      relatedKanji={grammar.relatedKanji}
-                    />
-                  </Typography>
+                  <Delete />
+                </IconButton>
+              </Paper>
+            ))}
+            <Button startIcon={<Add />} onClick={addExample}>
+              Add Example
+            </Button>
 
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption">{grammar.meaning}</Typography>
-                  </Box>
-                </Box>
-                <CardActions
-                  sx={{ display: "flex", justifyContent: "flex-end" }}
+            <Typography variant="h6">Usage Notes</Typography>
+            {form.notes.map((note, idx) => (
+              <Stack key={idx} direction="row" spacing={1} alignItems="center">
+                <TextField
+                  label={`Note ${idx + 1}`}
+                  size="small"
+                  fullWidth
+                  value={note}
+                  onChange={(e) => updateNote(idx, e.target.value)}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      notes: form.notes.filter((_, i) => i !== idx),
+                    })
+                  }
                 >
-                  <Stack direction="row" spacing={1}>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleEdit(grammar)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => openDeleteModal(grammar._id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Stack>
-                </CardActions>
-              </Card>
-            ))
-          ) : (
-            <Card
+                  <Delete />
+                </IconButton>
+              </Stack>
+            ))}
+            <Button startIcon={<Add />} onClick={addNote}>
+              Add Note
+            </Button>
+          </Stack>
+        </Box>
+      </Dialog>
+
+      {/* Display Cards */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: 3,
+          mt: 2,
+        }}
+      >
+        {filteredGrammars.map((grammar) => (
+          <Card key={grammar._id} sx={{ borderRadius: 5 }}>
+            <Box
               sx={{
-                backgroundColor: "background.paper",
-                borderRadius: 5,
-                p: 3,
+                bgcolor: alpha(theme.palette.primary.main, 0.9),
+                p: 2,
+                color: "white",
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Typography variant="caption">No data found.</Typography>
-            </Card>
-          )}
-        </Box>
+              <Typography variant="subtitle1">{grammar.pattern}</Typography>
+              <Typography variant="caption">
+                Chapter {grammar.chapter?.index}
+              </Typography>
+            </Box>
+            <Box sx={{ p: 2 }}>
+              <Typography
+                variant="body1"
+                color="primary"
+                sx={{ fontWeight: "bold" }}
+              >
+                {grammar.meaning}
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Examples: {grammar.examples?.length || 0}
+                </Typography>
+              </Box>
+            </Box>
+            <CardActions
+              sx={{ justifyContent: "flex-end", bgcolor: "grey.50" }}
+            >
+              <IconButton color="primary" onClick={() => handleEdit(grammar)}>
+                <Edit fontSize="small" />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => {
+                  setDeleteGrammarId(grammar._id);
+                  setShowDeleteModal(true);
+                }}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </CardActions>
+          </Card>
+        ))}
       </Box>
     </Box>
   );

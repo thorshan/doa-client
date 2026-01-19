@@ -13,7 +13,6 @@ import KanjiComponent from "./froms/KanjiComponent";
 import GrammarComponent from "./froms/GrammarComponent";
 import VocabComponent from "./froms/VocabComponent";
 import ModuleComponent from "./froms/ModuleComponent";
-import LessonComponent from "./froms/LessonComponent";
 import ExamComponent from "./froms/ExamComponent";
 import QuestionComponent from "./froms/QuestionComponent";
 import SpeakingComponent from "./froms/SpeakingComponent";
@@ -69,10 +68,10 @@ const TitleComponent = () => {
       </Stack>
 
       {/* Dialog Modal */}
-      {path === "exams" && <ExamComponent action={openDialog} toggle={closeHandler} />}
-      {path === "questions" && <QuestionComponent action={openDialog} toggle={closeHandler} />}
+      {/* {path === "exams" && <ExamComponent action={openDialog} toggle={closeHandler} />}
+      {path === "questions" && <QuestionComponent action={openDialog} toggle={closeHandler} />} */}
       {path === "modules" && <ModuleComponent action={openDialog} toggle={closeHandler} />}
-      {path === "lessons" && <LessonComponent action={openDialog} toggle={closeHandler} />}
+      {/* {path === "lessons" && <LessonComponent action={openDialog} toggle={closeHandler} />} */}
       {path === "levels" && <LevelComponent action={openDialog} toggle={closeHandler} />}
       {path === "kanji" && <KanjiComponent action={openDialog} toggle={closeHandler} />}
       {path === "grammars" && <GrammarComponent action={openDialog} toggle={closeHandler} />}

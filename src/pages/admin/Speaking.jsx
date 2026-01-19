@@ -1,8 +1,13 @@
 import {
+  alpha,
   AppBar,
+  Autocomplete,
   Box,
   Button,
+  Card,
+  CardActions,
   Dialog,
+  Divider,
   FormControl,
   IconButton,
   InputLabel,
@@ -11,365 +16,324 @@ import {
   Select,
   Slide,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Toolbar,
   Typography,
+  useTheme,
 } from "@mui/material";
-import TitleComponent from "../../components/TitleComponent";
 import React, { forwardRef, useEffect, useState } from "react";
-import { levelApi } from "../../api/levelApi";
+import { Close, Delete, Edit, Add, Headset, Person, Message, Warning } from "@mui/icons-material";
+import TitleComponent from "../../components/TitleComponent";
 import LoadingComponent from "../../components/LoadingComponent";
-import { Close, Delete, Edit } from "@mui/icons-material";
-import { translations } from "../../constants/translations";
-import { useLanguage } from "../../context/LanguageContext";
+import { chapterApi } from "../../api/chapterApi";
+import { levelApi } from "../../api/levelApi";
 import { kanjiApi } from "../../api/kanjiApi";
-import { speakingApi } from "../../api/speakingApi";
 import { vocabApi } from "../../api/vocabApi";
-import { grammarApi } from "../../api/grammarApi.js";
+import { grammarApi } from "../../api/grammarApi";
+import { speakingApi } from "../../api/speakingApi";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const emptyLine = (order) => ({
-  orderIndex: order,
-  speaker: { nameJa: "", nameMm: "" },
-  textJa: "",
-  textMn: "",
-  audioUrl: "",
-});
-
 const Speaking = () => {
-  const { language } = useLanguage();
+  const theme = useTheme();
+  
+  // Data States
+  const [chapters, setChapters] = useState([]);
   const [levels, setLevels] = useState([]);
   const [kanjis, setKanjis] = useState([]);
-  const [vocabs, setVocabs] = useState([]);
-  const [speakings, setSpeakings] = useState([]);
+  const [vocabularies, setVocabularies] = useState([]);
   const [grammars, setGrammars] = useState([]);
+  const [speakingList, setSpeakingList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editSpeaking, setEditSpeaking] = useState(null);
+  
+  // Modal/UI States
   const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteSpeakingId, setDeleteSpeakingId] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
-  const [form, setForm] = useState({
+  const initialForm = {
     level: "",
+    chapter: "",
     title: "会話",
     description: "",
+    audioUrl: "",
+    lines: [{ orderIndex: 0, speaker: { nameJa: "", nameMm: "" }, textJa: "", textMn: "", audioUrl: "" }],
     relatedKanji: [],
-    relatedVocabulary: [],
     relatedGrammar: [],
-    lines: [emptyLine(1)],
-  });
-
-  const fetchSpeakings = async () => {
-    try {
-      const res = await speakingApi.getAllSpeaking();
-      setSpeakings(res.data);
-    } catch (error) {
-      console.error(error);
-    }
+    relatedVocabulary: [],
   };
 
+  const [form, setForm] = useState(initialForm);
+
+  // Hotkeys & Initial Load
   useEffect(() => {
-    levelApi.getAllLevel().then((r) => setLevels(r.data));
-    kanjiApi.getAllKanji().then((r) => setKanjis(r.data));
-    vocabApi.getAllVocab().then((r) => setVocabs(r.data));
-    grammarApi.getAllGrammar().then((r) => setGrammars(r.data));
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+      }
+      if (e.key === "Escape") { setShowSearch(false); setSearch(""); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    fetchData();
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const updateSpeaker = (index, field, value) => {
-    const lines = [...form.lines];
-    lines[index].speaker[field] = value;
-    setForm({ ...form, lines });
-  };
-
-  const updateLine = (index, field, value) => {
-    const lines = [...form.lines];
-    lines[index][field] = value;
-
-    const isLast = index === lines.length - 1;
-    const hasContent = lines[index].textJa.trim() || lines[index].textMn.trim();
-
-    // auto append next line
-    if (isLast && hasContent) {
-      lines.push(emptyLine(lines.length + 1));
-    }
-
-    setForm({ ...form, lines });
-  };
-
-  // Handle Edit
-  const handleEdit = (kanji) => {
-    setForm({
-      level: "",
-      title: "会話",
-      description: "",
-      relatedKanji: [],
-      relatedVocabulary: [],
-      relatedGrammar: [],
-      lines: [emptyLine(1)],
-    });
-    setEditSpeaking(kanji);
-    setShowModal(true);
-  };
-
-  // Handle Update
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const cleanedLines = form.lines
-      .filter((l) => l.textJa.trim() && l.textMn.trim())
-      .map((l, i) => ({ ...l, orderIndex: i + 1 }));
-
-    if (cleanedLines.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    const payload = {
-      level: form.level,
-      title: form.title,
-      description: form.description,
-      lines: cleanedLines,
-      relatedKanji: form.relatedKanji.map((k) => k._id),
-      relatedVocabulary: form.relatedVocabulary.map((v) => v._id),
-    };
-
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      await speakingApi.updateSpeaking(editSpeaking._id, payload);
-      fetchSpeakings();
-    } catch (err) {
-      console.error(err.message);
+      const [ch, lvl, kj, vb, gm, sk] = await Promise.all([
+        chapterApi.getAllChapter(),
+        levelApi.getAllLevel(),
+        kanjiApi.getAllKanji(),
+        vocabApi.getAllVocab(),
+        grammarApi.getAllGrammar(),
+        speakingApi.getAllSpeaking()
+      ]);
+      setChapters(ch.data.data);
+      setLevels(lvl.data);
+      setKanjis(kj.data);
+      setVocabularies(vb.data);
+      setGrammars(gm.data.data);
+      setSpeakingList(sk.data);
+    } catch (error) {
+      console.error("Fetch Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const openDeleteModal = (id) => {
-    setDeleteSpeakingId(id);
-    setShowDeleteModal(true);
+  // --- Line Management ---
+  const addLine = () => {
+    setForm(prev => ({ 
+      ...prev, 
+      lines: [...prev.lines, { 
+        orderIndex: prev.lines.length, 
+        speaker: { nameJa: "", nameMm: "" }, 
+        textJa: "", textMn: "", audioUrl: "" 
+      }] 
+    }));
   };
 
-  const handleDelete = async () => {
-    if (deleteSpeakingId) {
-      await speakingApi.deleteSpeaking(deleteSpeakingId);
-      setShowDeleteModal(false);
-      setDeleteSpeakingId(null);
-      fetchSpeakings();
+  const updateLine = (idx, field, value, isSpeakerField = false) => {
+    const newLines = [...form.lines];
+    if (isSpeakerField) {
+      newLines[idx].speaker = { ...newLines[idx].speaker, [field]: value };
+    } else {
+      newLines[idx][field] = value;
+    }
+    setForm({ ...form, lines: newLines });
+  };
+
+  // --- CRUD Operations ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...form,
+        relatedKanji: form.relatedKanji.map(k => k._id || k),
+        relatedGrammar: form.relatedGrammar.map(g => g._id || g),
+        relatedVocabulary: form.relatedVocabulary.map(v => v._id || v)
+      };
+
+      if (editItem) {
+        await speakingApi.updateSpeaking(editItem._id, payload);
+      } else {
+        await speakingApi.createSpeaking(payload);
+      }
+      setShowModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Submit Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return <LoadingComponent />;
-  }
+  const handleEdit = (item) => {
+    setEditItem(item);
+    setForm({
+      level: item.level?._id || item.level,
+      chapter: item.chapter?._id || item.chapter,
+      title: item.title,
+      description: item.description || "",
+      audioUrl: item.audioUrl || "",
+      lines: item.lines || [],
+      relatedKanji: item.relatedKanji || [],
+      relatedGrammar: item.relatedGrammar || [],
+      relatedVocabulary: item.relatedVocabulary || [],
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await speakingApi.deleteSpeaking(deleteId);
+      setShowDeleteModal(false);
+      fetchData();
+    } catch (error) {
+      console.error("Delete Error:", error);
+    }
+  };
+
+  const filteredList = speakingList.filter(item => 
+    item.title.toLowerCase().includes(search.toLowerCase()) ||
+    item.chapter?.index?.toString().includes(search)
+  );
+
+  if (loading && speakingList.length === 0) return <LoadingComponent />;
 
   return (
     <Box>
       <TitleComponent />
 
-      {showModal && (
-        <React.Fragment>
-          <Dialog
-            component={"form"}
-            onSubmit={handleSubmit}
-            open={showModal}
-            onClose={() => setShowModal(false)}
-            slots={{
-              transition: Transition,
-            }}
-          >
-            <AppBar elevation={0} sx={{ position: "sticky" }}>
-              <Toolbar>
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  onClick={() => setShowModal(false)}
-                >
-                  <Close />
-                </IconButton>
-                <Typography sx={{ flex: 1 }} variant="h6">
-                  Add Data
-                </Typography>
-                <Button type="submit" color="inherit">
-                  Save
-                </Button>
-              </Toolbar>
-            </AppBar>
+      {/* Toolbar */}
+      <Stack direction="row" spacing={2} sx={{ py: 2 }} alignItems="center">
+        <Button 
+          variant="contained" 
+          startIcon={<Add />} 
+          onClick={() => { setEditItem(null); setForm(initialForm); setShowModal(true); }}
+          sx={{ borderRadius: 4 }}
+        >
+          Add Kaiwa
+        </Button>
+        {showSearch && (
+          <TextField
+            autoFocus fullWidth size="small" placeholder="Search Kaiwa Title or Chapter..."
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 5 } }}
+          />
+        )}
+      </Stack>
 
-            <Box sx={{ p: 3 }}>
-              {/* BASIC INFO */}
-              <TextField
-                label="Title"
-                fullWidth
-                size="small"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-              />
+      {/* Entry Dialog */}
+      <Dialog fullScreen open={showModal} onClose={() => setShowModal(false)} TransitionComponent={Transition}>
+        <AppBar sx={{ position: 'relative' }} elevation={0}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={() => setShowModal(false)}><Close /></IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6">
+              {editItem ? `Edit: ${editItem.title}` : "New Speaking Entry"}
+            </Typography>
+            <Button color="inherit" onClick={handleSubmit}>Save Content</Button>
+          </Toolbar>
+        </AppBar>
 
-              <TextField
-                label="Description"
-                fullWidth
-                size="small"
-                sx={{ mt: 2 }}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
-
-              <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+        <Box sx={{ p: 4, maxWidth: 1000, mx: 'auto', width: '100%' }}>
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
                 <InputLabel>Level</InputLabel>
-                <Select
-                  label="Level"
-                  value={form.level}
-                  required
-                  onChange={(e) => setForm({ ...form, level: e.target.value })}
-                >
-                  {levels.map((l) => (
-                    <MenuItem key={l._id} value={l._id}>
-                      {l.code}
-                    </MenuItem>
-                  ))}
+                <Select value={form.level} label="Level" onChange={(e) => setForm({...form, level: e.target.value})}>
+                  {levels.map(l => <MenuItem key={l._id} value={l._id}>{l.code}</MenuItem>)}
                 </Select>
               </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Chapter</InputLabel>
+                <Select value={form.chapter} label="Chapter" onChange={(e) => setForm({...form, chapter: e.target.value})}>
+                  {chapters.map(c => <MenuItem key={c._id} value={c._id}>Chapter {c.index}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Stack>
 
-              {/* KAIWA LINES */}
-              <Typography variant="h6" sx={{ mt: 4 }}>
-                Dialogue
-              </Typography>
+            <TextField label="Conversation Title" fullWidth value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} />
+            <TextField label="Description / Scenario" multiline rows={2} fullWidth value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} />
+            <TextField label="Global Audio URL" fullWidth value={form.audioUrl} onChange={(e) => setForm({...form, audioUrl: e.target.value})} />
 
-              {form.lines.map((line, i) => (
-                <Stack key={i} spacing={1} sx={{ mt: 2 }}>
-                  <TextField
-                    label="Speaker (JP)"
-                    size="small"
-                    value={line.speaker.nameJa}
-                    onChange={(e) => updateSpeaker(i, "nameJa", e.target.value)}
-                  />
-                  <TextField
-                    label="Speaker (MM)"
-                    size="small"
-                    value={line.speaker.nameMm}
-                    onChange={(e) => updateSpeaker(i, "nameMm", e.target.value)}
-                  />
-                  <TextField
-                    label="Japanese"
-                    size="small"
-                    value={line.textJa}
-                    onChange={(e) => updateLine(i, "textJa", e.target.value)}
-                  />
-                  <TextField
-                    label="Myanmar"
-                    size="small"
-                    value={line.textMn}
-                    onChange={(e) => updateLine(i, "textMn", e.target.value)}
-                  />
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+              <Message color="primary" /> Conversation Script
+            </Typography>
+
+            {form.lines.map((line, idx) => (
+              <Paper key={idx} variant="outlined" sx={{ p: 3, mb: 2, bgcolor: 'background.default', position: 'relative' }}>
+                <IconButton 
+                  size="small" color="error" 
+                  sx={{ position: 'absolute', top: 10, right: 10 }}
+                  onClick={() => setForm({...form, lines: form.lines.filter((_, i) => i !== idx)})}
+                >
+                  <Delete />
+                </IconButton>
+                
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField label="Speaker (Ja)" size="small" value={line.speaker.nameJa} onChange={(e) => updateLine(idx, "nameJa", e.target.value, true)} />
+                    <TextField label="Speaker (Translation)" size="small" value={line.speaker.nameMm} onChange={(e) => updateLine(idx, "nameMm", e.target.value, true)} />
+                    <TextField label="Line Audio URL" size="small" fullWidth value={line.audioUrl} onChange={(e) => updateLine(idx, "audioUrl", e.target.value)} />
+                  </Stack>
+                  <TextField label="Japanese Sentence" multiline fullWidth value={line.textJa} onChange={(e) => updateLine(idx, "textJa", e.target.value)} />
+                  <TextField label="Myanmar/English Translation" multiline fullWidth value={line.textMn} onChange={(e) => updateLine(idx, "textMn", e.target.value)} />
                 </Stack>
-              ))}
+              </Paper>
+            ))}
+            <Button startIcon={<Add />} variant="outlined" onClick={addLine} sx={{ mb: 4 }}>Add Speech Line</Button>
 
-              {/* RELATIONS */}
-              <Autocomplete
-                multiple
-                sx={{ mt: 4 }}
-                options={kanjis}
-                value={form.relatedKanji}
-                getOptionLabel={(o) => o.character}
-                onChange={(e, v) => setForm({ ...form, relatedKanji: v })}
-                renderInput={(params) => (
-                  <TextField {...params} label="Related Kanji" />
-                )}
-              />
+            <Divider>Related References</Divider>
 
-              <Autocomplete
-                multiple
-                sx={{ mt: 2 }}
-                options={vocabs}
-                value={form.relatedVocabulary}
-                getOptionLabel={(o) => o.word}
-                onChange={(e, v) => setForm({ ...form, relatedVocabulary: v })}
-                renderInput={(params) => (
-                  <TextField {...params} label="Related Vocabulary" />
-                )}
-              />
+            <Autocomplete
+              multiple options={kanjis} getOptionLabel={(o) => o.character}
+              value={form.relatedKanji} onChange={(_, v) => setForm({...form, relatedKanji: v})}
+              renderInput={(p) => <TextField {...p} label="Related Kanji" />}
+            />
 
-              <Autocomplete
-                multiple
-                sx={{ mt: 2 }}
-                options={grammars}
-                value={form.relatedGrammar}
-                getOptionLabel={(o) => o.structure}
-                onChange={(e, v) => setForm({ ...form, relatedGrammar: v })}
-                renderInput={(params) => (
-                  <TextField {...params} label="Related Grammar" />
-                )}
-              />
-            </Box>
-          </Dialog>
-        </React.Fragment>
-      )}
+            <Autocomplete
+              multiple options={grammars} getOptionLabel={(o) => o.pattern}
+              value={form.relatedGrammar} onChange={(_, v) => setForm({...form, relatedGrammar: v})}
+              renderInput={(p) => <TextField {...p} label="Related Grammar Patterns" />}
+            />
 
-      {showDeleteModal && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-            animation: "fadeIn 0.3s",
-          }}
-        >
-          <Paper
-            sx={{
-              p: 4,
-              width: 400,
-              transform: "translateY(-30px)",
-              animation: "slideDown 0.3s forwards",
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6" mb={2}>
-              {translations[language].caution || "Caution"}
-            </Typography>
-            <Typography mb={3}>
-              {translations[language].delete_confirm ||
-                "Are you sure want to delete?"}
-            </Typography>
-            <Box display="flex" justifyContent="center">
-              <Button
-                size="small"
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 2 }}
-                onClick={() => setShowDeleteModal(false)}
-              >
-                {translations[language].cancel || "Cancel"}
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                onClick={handleDelete}
-              >
-                {translations[language].delete || "Delete"}
-              </Button>
-            </Box>
-          </Paper>
+            <Autocomplete
+              multiple options={vocabularies} getOptionLabel={(o) => o.word}
+              value={form.relatedVocabulary} onChange={(_, v) => setForm({...form, relatedVocabulary: v})}
+              renderInput={(p) => <TextField {...p} label="Related Vocabulary" />}
+            />
+          </Stack>
         </Box>
-      )}
+      </Dialog>
 
-      {/* Data */}
-      <Box sx={{ my: 3 }}></Box>
+      {/* Delete Confirmation */}
+      <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Warning color="error" sx={{ fontSize: 40 }} />
+          <Typography variant="h6">Delete Kaiwa?</Typography>
+          <Typography variant="body2" color="text.secondary">This will remove all dialogue lines and audio references.</Typography>
+          <Stack direction="row" spacing={2} mt={3} justifyContent="center">
+            <Button variant="outlined" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={handleDelete}>Confirm Delete</Button>
+          </Stack>
+        </Box>
+      </Dialog>
+
+      {/* Main Grid Display */}
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 3, mt: 2 }}>
+        {filteredList.map((item) => (
+          <Card key={item._id} sx={{ borderRadius: 5, overflow: 'hidden' }}>
+            <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.9), p: 2, color: 'white', display: 'flex', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold">{item.title}</Typography>
+                <Typography variant="caption">{item.level?.code} • Chapter {item.chapter?.index}</Typography>
+              </Box>
+              <Headset />
+            </Box>
+            <Box sx={{ p: 2, height: 80 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                {item.description?.substring(0, 80)}...
+              </Typography>
+              <Typography variant="caption" color="primary" display="block" sx={{ mt: 1 }}>
+                {item.lines?.length} Dialogue Lines
+              </Typography>
+            </Box>
+            <CardActions sx={{ justifyContent: 'flex-end', bgcolor: 'grey.50' }}>
+              <IconButton color="primary" onClick={() => handleEdit(item)}><Edit fontSize="small" /></IconButton>
+              <IconButton color="error" onClick={() => { setDeleteId(item._id); setShowDeleteModal(true); }}><Delete fontSize="small" /></IconButton>
+            </CardActions>
+          </Card>
+        ))}
+      </Box>
     </Box>
   );
 };

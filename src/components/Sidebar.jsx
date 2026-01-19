@@ -58,6 +58,12 @@ const Sidebar = () => {
     { text: "Dashboard", icon: <DashboardIcon />, type: "item" },
     { text: "Users", icon: <People />, type: "item", path: "/admin/users" },
     {
+      text: "Chapters",
+      icon: <GradeRounded />,
+      type: "item",
+      path: "/admin/chapters",
+    },
+    {
       text: "Exams",
       icon: <GradeRounded />,
       type: "item",
@@ -104,6 +110,24 @@ const Sidebar = () => {
       icon: <SentimentDissatisfied />,
       type: "item",
       path: "/admin/grammars",
+    },
+    {
+      text: "Renshuu A",
+      icon: <SentimentDissatisfied />,
+      type: "item",
+      path: "/admin/renshuua",
+    },
+    {
+      text: "Renshuu B",
+      icon: <SentimentDissatisfied />,
+      type: "item",
+      path: "/admin/renshuub",
+    },
+    {
+      text: "Renshuu C",
+      icon: <SentimentDissatisfied />,
+      type: "item",
+      path: "/admin/renshuuc",
     },
     {
       text: "Speaking",

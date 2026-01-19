@@ -14,7 +14,6 @@ import { translations } from "../../constants/translations";
 import { useEffect, useState } from "react";
 import { progressApi } from "../../api/progressApi";
 import { useNavigate } from "react-router-dom";
-import { lessonApi } from "../../api/lessonApi";
 
 const N5Grammar = () => {
   const { language } = useLanguage();
@@ -91,12 +90,8 @@ const N5Grammar = () => {
                 onClick={async () => {
                   try {
                     // Fetch current lecture data
-                    const res = await lessonApi.getLesson(progress.lecture._id);
-                    const lecture = res.data;
 
                     // Fetch all lectures (to find next one)
-                    const allRes = await lessonApi.getAllLesson();
-                    const allLectures = allRes.data;
 
                     // Find index of current lecture
                     const currentIndex = allLectures.findIndex(

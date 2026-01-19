@@ -15,7 +15,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
 import { useState, useEffect } from "react";
-import { lessonApi } from "../../api/lessonApi";
 import LoadingComponent from "../../components/LoadingComponent";
 import RenderFurigana from "../../components/RenderFurigana";
 import { grammarApi } from "../../api/grammarApi";
@@ -39,9 +38,7 @@ const ChapterDetails = () => {
         setLoading(true);
 
         const [lectureRes, grammarRes, lecturesRes] = await Promise.all([
-          lessonApi.getLesson(lectureId),
           grammarApi.getGrammar(patternId),
-          lessonApi.getAllLesson(),
         ]);
 
         setLecture(lectureRes.data);

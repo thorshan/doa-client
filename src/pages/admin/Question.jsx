@@ -1,412 +1,368 @@
 import {
-  AppBar,
   Box,
   Button,
+  Card,
   Dialog,
+  Divider,
   FormControl,
   IconButton,
   InputLabel,
   MenuItem,
   Paper,
+  Radio,
+  RadioGroup,
   Select,
   Slide,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Toolbar,
   Typography,
+  AppBar,
+  useTheme,
+  Chip,
+  InputAdornment,
 } from "@mui/material";
 import React, { forwardRef, useEffect, useState } from "react";
-import TitleComponent from "../../components/TitleComponent";
-import { examApi } from "../../api/examApi";
-import { translations } from "../../constants/translations";
-import { useLanguage } from "../../context/LanguageContext";
-import { EXAM_TYPES, QUESTION_TYPES } from "../../constants/exam";
+import {
+  Close,
+  Delete,
+  Edit,
+  Add,
+  Search,
+  HelpOutline,
+  AudioFile,
+  Image as ImageIcon,
+  Warning,
+} from "@mui/icons-material";
 import { questionApi } from "../../api/questionApi";
-import { Close, Delete, Edit } from "@mui/icons-material";
+import { levelApi } from "../../api/levelApi";
+import TitleComponent from "../../components/TitleComponent";
 import LoadingComponent from "../../components/LoadingComponent";
 
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+const Transition = forwardRef((props, ref) => (
+  <Slide direction="up" ref={ref} {...props} />
+));
 
-const Question = () => {
-  const { language } = useLanguage();
-  const [loading, setLoading] = useState(false);
-  const [exams, setExams] = useState([]);
+const Questions = () => {
   const [questions, setQuestions] = useState([]);
-  const [editQuestion, setEditQuestion] = useState(null);
+  const [levels, setLevels] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteQuestionId, setDeleteQuestionId] = useState(false);
-  const [form, setForm] = useState({
-    exam: "",
-    type: "",
-    question: "",
-    options: [],
-    correctAnswer: "",
-    explanation: "",
-    marks: 0,
-  });
+  const [editItem, setEditItem] = useState(null);
+  const [search, setSearch] = useState("");
+  const [deleteId, setDeleteId] = useState(null);
 
-  // Fetch Exams
-  const fetchExams = async () => {
+  const initialForm = {
+    text: "",
+    audioUrl: "",
+    imageUrl: "",
+    options: ["", "", "", ""],
+    correctOptionIndex: 0,
+    level: "",
+    category: "Vocabulary",
+    points: 1,
+  };
+  const [form, setForm] = useState(initialForm);
+
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await examApi.getAllExams();
-      setExams(res.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      const [qRes, lRes] = await Promise.all([
+        questionApi.getAllQuestions(),
+        levelApi.getAllLevel(),
+      ]);
+      setQuestions(qRes.data.data);
+      setLevels(lRes.data);
+    } catch (e) {
+      console.error(e);
     }
+    setLoading(false);
   };
-
   useEffect(() => {
-    fetchExams();
+    fetchData();
   }, []);
 
-  // Fetch Question
-  const fetchQuestions = async () => {
-    setLoading(true);
+  const handleSubmit = async () => {
     try {
-      const res = await questionApi.getAllQuestions();
-      setQuestions(res.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
-
-  // Handle Edit
-  const handleEdit = (exam) => {
-    setForm({
-      exam: exam.exam._id,
-      type: exam.type || "",
-      question: exam.question || "",
-      options: exam.options || [],
-      correctAnswer: exam.correctAnswer || "",
-      explanation: exam.explanation || "",
-      marks: exam.marks || 0,
-    });
-    setEditQuestion(exam);
-    setShowModal(true);
-  };
-
-  // Handle Update
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await questionApi.updateQuestion(editQuestion._id, form);
-      fetchQuestions();
-    } catch (error) {
-      console.error(error.message);
-    } finally {
+      if (editItem) await questionApi.updateQuestion(editItem._id, form);
+      else await questionApi.createQuestion(form);
       setShowModal(false);
-      setLoading(false);
+      fetchData();
+    } catch (e) {
+      console.error(e);
     }
-  };
-
-  const openDeleteModal = (id) => {
-    setDeleteQuestionId(id);
-    setShowDeleteModal(true);
   };
 
   const handleDelete = async () => {
-    if (deleteQuestionId) {
-      await questionApi.deleteQuestion(deleteQuestionId);
-      setShowDeleteModal(false);
-      setDeleteQuestionId(null);
-      fetchQuestions();
-    }
+    await questionApi.deleteQuestion(deleteId);
+    setDeleteId(null);
+    fetchData();
   };
 
-  if (loading) return <LoadingComponent />;
+  const filteredQuestions = questions.filter(
+    (q) =>
+      q.text?.toLowerCase().includes(search.toLowerCase()) ||
+      q.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading && questions.length === 0) return <LoadingComponent />;
 
   return (
     <Box>
       <TitleComponent />
 
-      {/*  */}
-      {showModal && (
-        <Dialog
-          component="form"
-          onSubmit={handleSubmit}
-          open={showModal}
-          onClose={() => setShowModal(false)}
-          slots={{ transition: Transition }}
-        >
-          <AppBar elevation={0} sx={{ position: "sticky" }}>
-            <Toolbar>
-              <IconButton
-                edge="start"
-                color="inherit"
-                onClick={() => setShowModal(false)}
-                aria-label="close"
-              >
-                <Close />
-              </IconButton>
-              <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                {translations[language]?.addExam || "Add Exam"}
-              </Typography>
-              <Button type="submit" color="inherit">
-                {translations[language]?.save || "Save"}
-              </Button>
-            </Toolbar>
-          </AppBar>
-
-          <Box sx={{ p: 3, backgroundColor: "background.paper" }}>
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Exam</InputLabel>
-              <Select
-                value={form.exam}
-                required
-                label="Exam"
-                onChange={(e) => setForm({ ...form, exam: e.target.value })}
-              >
-                {exams.map((exam) => (
-                  <MenuItem key={exam._id} value={exam._id}>
-                    {exam.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Question Type */}
-            <FormControl fullWidth size="small" margin="normal">
-              <InputLabel>Question Type</InputLabel>
-              <Select
-                value={form.type}
-                required
-                label="Question Type"
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-              >
-                {Object.keys(QUESTION_TYPES).map((key) => (
-                  <MenuItem key={key} value={QUESTION_TYPES[key]}>
-                    {QUESTION_TYPES[key]}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Question Text */}
-            <TextField
-              label="Question"
-              color="primary"
-              required
-              fullWidth
-              size="small"
-              margin="normal"
-              value={form.question}
-              onChange={(e) => setForm({ ...form, question: e.target.value })}
-            />
-
-            {/* Options with add/remove */}
-            <Box sx={{ my: 1 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Options
-              </Typography>
-
-              {form.options.map((opt, idx) => (
-                <Box
-                  key={idx}
-                  sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}
-                >
-                  <TextField
-                    label={`Option ${idx + 1}`}
-                    color="primary"
-                    fullWidth
-                    size="small"
-                    value={form.options[idx]}
-                    onChange={(e) => {
-                      const newOptions = [...form.options];
-                      newOptions[idx] = e.target.value;
-                      setForm({ ...form, options: newOptions });
-                    }}
-                  />
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    onClick={() => {
-                      const newOptions = form.options.filter(
-                        (_, i) => i !== idx
-                      );
-                      setForm({ ...form, options: newOptions });
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </Box>
-              ))}
-
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() =>
-                  setForm({ ...form, options: [...form.options, ""] })
-                }
-              >
-                Add Option
-              </Button>
-            </Box>
-
-            {/* Correct Answer */}
-            <TextField
-              label="Correct Answer"
-              color="primary"
-              required
-              fullWidth
-              size="small"
-              margin="normal"
-              value={form.correctAnswer}
-              onChange={(e) =>
-                setForm({ ...form, correctAnswer: e.target.value })
-              }
-            />
-
-            {/* Explanation */}
-            <TextField
-              label="Explanation"
-              color="primary"
-              fullWidth
-              size="small"
-              margin="normal"
-              value={form.explanation}
-              onChange={(e) =>
-                setForm({ ...form, explanation: e.target.value })
-              }
-            />
-
-            {/* Marks */}
-            <TextField
-              label="Marks"
-              color="primary"
-              type="number"
-              fullWidth
-              size="small"
-              margin="normal"
-              value={form.marks}
-              onChange={(e) =>
-                setForm({ ...form, marks: parseInt(e.target.value) })
-              }
-            />
-          </Box>
-        </Dialog>
-      )}
-
-      {showDeleteModal && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-            animation: "fadeIn 0.3s",
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => {
+            setEditItem(null);
+            setForm(initialForm);
+            setShowModal(true);
           }}
         >
-          <Paper
-            sx={{
-              p: 4,
-              width: 400,
-              transform: "translateY(-30px)",
-              animation: "slideDown 0.3s forwards",
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6" mb={2}>
-              {translations[language].caution || "Caution"}
-            </Typography>
-            <Typography mb={3}>
-              {translations[language].delete_confirm ||
-                "Are you sure want to delete?"}
-            </Typography>
-            <Box display="flex" justifyContent="center">
-              <Button
-                size="small"
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 2 }}
-                onClick={() => setShowDeleteModal(false)}
-              >
-                {translations[language].cancel || "Cancel"}
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                onClick={handleDelete}
-              >
-                {translations[language].delete || "Delete"}
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-      )}
+          New Question
+        </Button>
+        <TextField
+          size="small"
+          placeholder="Search questions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Stack>
 
-      <Box sx={{ my: 3 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>No.</TableCell>
-              <TableCell>Exam</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Question</TableCell>
-              <TableCell>Marks</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {questions.length > 0 ? (
-              questions.map((question, index) => (
-                <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{question.exam?.title || "N/A"}</TableCell>
-                  <TableCell>{question.type}</TableCell>
-                  <TableCell>{question.question || "N/A"}</TableCell>
-                  <TableCell>{question.marks || "N/A"}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                      <Stack spacing={2} direction={"row"}>
-                        <IconButton onClick={() => handleEdit(question)}>
-                          <Edit fontSize="small" color="success" />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => openDeleteModal(question._id)}
-                        >
-                          <Delete fontSize="small" color="error" />
-                        </IconButton>
-                      </Stack>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6}>No data found.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: 2,
+        }}
+      >
+        {filteredQuestions.map((q) => (
+          <Card
+            key={q._id}
+            sx={{ p: 2, borderRadius: 3, position: "relative" }}
+          >
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Chip label={q.category} size="small" color="secondary" />
+              <Chip label={q.level?.code} size="small" variant="outlined" />
+            </Stack>
+            <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
+              {q.text}
+            </Typography>
+
+            <Stack spacing={0.5} sx={{ mb: 2 }}>
+              {q.options.map((opt, i) => (
+                <Typography
+                  key={i}
+                  variant="caption"
+                  sx={{
+                    color:
+                      i === q.correctOptionIndex
+                        ? "success.main"
+                        : "text.secondary",
+                    fontWeight: i === q.correctOptionIndex ? "bold" : "normal",
+                  }}
+                >
+                  {i + 1}. {opt} {i === q.correctOptionIndex && "✓"}
+                </Typography>
+              ))}
+            </Stack>
+
+            <Divider />
+            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
+              <IconButton
+                onClick={() => {
+                  setEditItem(q);
+                  setForm(q);
+                  setShowModal(true);
+                }}
+                size="small"
+                color="primary"
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                onClick={() => setDeleteId(q._id)}
+                size="small"
+                color="error"
+              >
+                <Delete />
+              </IconButton>
+            </Stack>
+          </Card>
+        ))}
       </Box>
+
+      {/* Editor Dialog */}
+      <Dialog
+        fullScreen
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        TransitionComponent={Transition}
+      >
+        <AppBar sx={{ position: "relative" }}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setShowModal(false)}
+            >
+              <Close />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6">
+              {editItem ? "Edit Question" : "Create Question"}
+            </Typography>
+            <Button color="inherit" onClick={handleSubmit}>
+              Save to Bank
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <Box sx={{ p: 4, maxWidth: 800, mx: "auto", width: "100%" }}>
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
+                <InputLabel>Level</InputLabel>
+                <Select
+                  value={form.level?._id || form.level}
+                  label="Level"
+                  onChange={(e) => setForm({ ...form, level: e.target.value })}
+                >
+                  {levels.map((l) => (
+                    <MenuItem key={l._id} value={l._id}>
+                      {l.code}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={form.category}
+                  label="Category"
+                  onChange={(e) =>
+                    setForm({ ...form, category: e.target.value })
+                  }
+                >
+                  {[
+                    "Grammar",
+                    "Vocabulary",
+                    "Kanji",
+                    "Listening",
+                    "Reading",
+                  ].map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+
+            <TextField
+              label="Question Text"
+              multiline
+              rows={3}
+              fullWidth
+              value={form.text}
+              onChange={(e) => setForm({ ...form, text: e.target.value })}
+            />
+
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Audio URL"
+                fullWidth
+                size="small"
+                value={form.audioUrl}
+                onChange={(e) => setForm({ ...form, audioUrl: e.target.value })}
+                InputProps={{
+                  startAdornment: (
+                    <AudioFile sx={{ mr: 1, color: "action.active" }} />
+                  ),
+                }}
+              />
+              <TextField
+                label="Image URL"
+                fullWidth
+                size="small"
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                InputProps={{
+                  startAdornment: (
+                    <ImageIcon sx={{ mr: 1, color: "action.active" }} />
+                  ),
+                }}
+              />
+            </Stack>
+
+            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: "bold" }}>
+              Options (Select the correct radio)
+            </Typography>
+            <RadioGroup
+              value={form.correctOptionIndex}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  correctOptionIndex: parseInt(e.target.value),
+                })
+              }
+            >
+              {form.options.map((opt, i) => (
+                <Stack
+                  key={i}
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  sx={{ mb: 2 }}
+                >
+                  <Radio value={i} />
+                  <TextField
+                    fullWidth
+                    label={`Option ${i + 1}`}
+                    value={opt}
+                    onChange={(e) => {
+                      const newOpts = [...form.options];
+                      newOpts[i] = e.target.value;
+                      setForm({ ...form, options: newOpts });
+                    }}
+                  />
+                </Stack>
+              ))}
+            </RadioGroup>
+          </Stack>
+        </Box>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
+        <Box sx={{ p: 3, textAlign: "center" }}>
+          <Warning color="error" sx={{ fontSize: 40 }} />
+          <Typography variant="h6">Delete this question?</Typography>
+          <Typography variant="body2" color="text.secondary">
+            This will remove it from all exams using it.
+          </Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ mt: 3 }}
+            justifyContent="center"
+          >
+            <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </Stack>
+        </Box>
+      </Dialog>
     </Box>
   );
 };
 
-export default Question;
+export default Questions;
