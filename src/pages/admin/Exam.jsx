@@ -402,10 +402,11 @@ const Exam = () => {
                         }
                       >
                         {[
+                          "Level Test",
                           "Chapter Test",
-                          "Final Exam",
+                          "Module Final",
                           "Mock JLPT",
-                          "Placement Test",
+                          "Mini Quiz",
                         ].map((t) => (
                           <MenuItem key={t} value={t}>
                             {t}
