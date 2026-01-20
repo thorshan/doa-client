@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import {
   alpha,
   AppBar,
@@ -7,10 +7,16 @@ import {
   Button,
   Card,
   CardActions,
+  Chip,
   Dialog,
   Divider,
+  FormControl,
   IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Slide,
   Stack,
   TextField,
@@ -18,21 +24,21 @@ import {
   Typography,
   useTheme,
   Grid,
-  MenuItem,
-  Chip,
 } from "@mui/material";
 import {
   Close,
   Delete,
   Edit,
   Add,
-  DragIndicator,
-  PictureAsPdf,
-  Article,
-  Save,
-  AccessTime,
   Assignment,
-  Layers,
+  Search,
+  Timer,
+  DragIndicator,
+  ListAlt,
+  Article,
+  PictureAsPdf,
+  Save,
+  Warning,
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -41,39 +47,42 @@ import { examApi } from "../../api/examApi";
 import { questionApi } from "../../api/questionApi";
 import { levelApi } from "../../api/levelApi";
 
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+// Component Imports
+import TitleComponent from "../../components/TitleComponent";
+import LoadingComponent from "../../components/LoadingComponent";
+
+const Transition = forwardRef((props, ref) => (
+  <Slide direction="up" ref={ref} {...props} />
+));
 
 const Exam = () => {
   const theme = useTheme();
 
-  // --- CONSTANTS ---
-  const EXAM_TYPES = [
-    "Level Test",
-    "Chapter Test",
-    "Module Final",
-    "Mock JLPT",
-    "Mini Quiz",
-  ];
-
-  // --- STATE ---
+  // Data States
   const [exams, setExams] = useState([]);
   const [questionsPool, setQuestionsPool] = useState([]);
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // UI States
   const [showModal, setShowModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [editItem, setEditItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteId, setDeleteId] = useState(null);
 
-  const [form, setForm] = useState({
+  const initialForm = {
     title: "",
-    examType: "Final Exam",
+    examType: "Chapter Test",
     level: "",
-    durationMinutes: 60,
     questions: [],
-  });
+    durationMinutes: 30,
+  };
+  const [form, setForm] = useState(initialForm);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -86,60 +95,56 @@ const Exam = () => {
       setExams(eRes.data.data || []);
       setQuestionsPool(qRes.data.data || []);
       setLevels(lRes.data || []);
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleOpenModal = (item = null) => {
     setShowPreview(false);
     if (item) {
-      setEditId(item._id);
+      setEditItem(item);
+      // Ensure questions have full data for the preview circles
       const detailedQs = (item.questions || []).map((q) => {
         const id = typeof q === "string" ? q : q._id;
         return questionsPool.find((p) => p._id === id) || q;
       });
       setForm({
-        title: item.title || "",
-        examType: item.examType || "Final Exam",
-        level: item.level?._id || item.level || "",
-        durationMinutes: item.durationMinutes || 60,
+        ...item,
+        level: item.level?._id || item.level,
         questions: detailedQs,
       });
     } else {
-      setEditId(null);
-      setForm({
-        title: "",
-        examType: "Final Exam",
-        level: "",
-        durationMinutes: 60,
-        questions: [],
-      });
+      setEditItem(null);
+      setForm(initialForm);
     }
     setShowModal(true);
   };
 
-  const handleSave = async () => {
-    const payload = { ...form, questions: form.questions.map((q) => q._id) };
+  const handleSubmit = async () => {
     try {
-      if (editId) await examApi.updateExam(editId, payload);
+      const payload = {
+        ...form,
+        questions: form.questions.map((q) => q._id || q),
+      };
+      if (editItem) await examApi.updateExam(editItem._id, payload);
       else await examApi.createExam(payload);
       setShowModal(false);
       fetchData();
-    } catch (err) {
-      console.error("Save error:", err);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this exam?")) {
-      examApi.deleteExam(id).then(() => fetchData());
+  const handleDelete = async () => {
+    try {
+      await examApi.deleteExam(deleteId);
+      setDeleteId(null);
+      fetchData();
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -156,114 +161,138 @@ const Exam = () => {
   };
 
   const currentLevel = levels.find((l) => l._id === form.level);
+  const filteredExams = exams.filter((ex) =>
+    ex.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading && exams.length === 0) return <LoadingComponent />;
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box>
+      <TitleComponent />
+
+      {/* PRINT CSS */}
       <style>
         {`
           @media print {
             body * { visibility: hidden; }
-            #exam-print-area, #exam-print-area * { visibility: visible; }
-            #exam-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-            .no-print { display: none !important; }
-            @page { size: A4; margin: 20mm; }
+            #jlpt-print-area, #jlpt-print-area * { visibility: visible; }
+            #jlpt-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            @page { size: A4; margin: 15mm; }
           }
         `}
       </style>
 
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 4 }}
-      >
-        <Typography variant="h5" fontWeight="bold">
-          Exam Management
-        </Typography>
+      {/* Toolbar */}
+      <Stack direction="row" spacing={2} sx={{ mb: 4 }} alignItems="center">
         <Button
           variant="contained"
           startIcon={<Add />}
           onClick={() => handleOpenModal()}
+          sx={{ borderRadius: 3 }}
         >
-          Create Exam
+          New Exam Set
         </Button>
+        <TextField
+          size="small"
+          placeholder="Search exams..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ width: 300 }}
+        />
       </Stack>
 
-      <Grid container spacing={3}>
-        {exams.map((ex) => (
-          <Grid item xs={12} sm={6} md={4} key={ex._id}>
-            <Card
-              variant="outlined"
+      {/* Grid */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+          gap: 3,
+        }}
+      >
+        {filteredExams.map((ex) => (
+          <Card
+            key={ex._id}
+            sx={{
+              borderRadius: 4,
+              overflow: "hidden",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box
+              sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}
+            >
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="start"
+              >
+                <Box>
+                  <Typography variant="h6" fontWeight="bold">
+                    {ex.title}
+                  </Typography>
+                  <Chip
+                    label={ex.examType}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ mt: 0.5 }}
+                  />
+                </Box>
+                <Chip
+                  label={ex.level?.code || "N/A"}
+                  size="small"
+                  color="secondary"
+                />
+              </Stack>
+            </Box>
+            <Box sx={{ p: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    <ListAlt
+                      sx={{ fontSize: 16, mr: 1, verticalAlign: "middle" }}
+                    />{" "}
+                    {ex.questions?.length || 0} Items
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    <Timer
+                      sx={{ fontSize: 16, mr: 1, verticalAlign: "middle" }}
+                    />{" "}
+                    {ex.durationMinutes} Mins
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+            <Divider />
+            <CardActions
               sx={{
-                borderRadius: 3,
-                position: "relative",
-                overflow: "visible",
-                "&:hover": { boxShadow: theme.shadows[4] },
+                justifyContent: "flex-end",
+                bgcolor: alpha(theme.palette.grey[500], 0.02),
               }}
             >
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.05),
-                  borderTopLeftRadius: 12,
-                  borderTopRightRadius: 12,
-                }}
-              >
-                <Typography variant="h6" noWrap fontWeight="bold">
-                  {ex.title}
-                </Typography>
-                <Chip
-                  label={ex.examType}
-                  size="small"
-                  color="primary"
-                  sx={{ mt: 1 }}
-                />
-              </Box>
-              <Divider />
-              <Box sx={{ p: 2 }}>
-                <Stack spacing={1}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Layers sx={{ fontSize: 18, color: "text.secondary" }} />
-                    <Typography variant="body2">
-                      Level: <b>{ex.level?.code || "N/A"}</b>
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <AccessTime
-                      sx={{ fontSize: 18, color: "text.secondary" }}
-                    />
-                    <Typography variant="body2">
-                      Duration: <b>{ex.durationMinutes} mins</b>
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Assignment
-                      sx={{ fontSize: 18, color: "text.secondary" }}
-                    />
-                    <Typography variant="body2">
-                      Questions: <b>{ex.questions?.length || 0} items</b>
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Box>
-              <CardActions
-                sx={{
-                  justifyContent: "flex-end",
-                  bgcolor: "background.transparent",
-                }}
-              >
-                <IconButton color="primary" onClick={() => handleOpenModal(ex)}>
-                  <Edit fontSize="small" />
-                </IconButton>
-                <IconButton color="error" onClick={() => handleDelete(ex._id)}>
-                  <Delete fontSize="small" />
-                </IconButton>
-              </CardActions>
-            </Card>
-          </Grid>
+              <IconButton color="primary" onClick={() => handleOpenModal(ex)}>
+                <Edit fontSize="small" />
+              </IconButton>
+              <IconButton color="error" onClick={() => setDeleteId(ex._id)}>
+                <Delete fontSize="small" />
+              </IconButton>
+            </CardActions>
+          </Card>
         ))}
-      </Grid>
+      </Box>
 
+      {/* Editor & Preview Dialog */}
       <Dialog
         fullScreen
         open={showModal}
@@ -275,16 +304,24 @@ const Exam = () => {
             position: "relative",
             bgcolor: "background.paper",
             color: "text.primary",
-            borderBottom: "1px solid #e0e0e0",
+            borderBottom: "1px solid",
+            borderColor: "divider",
           }}
           elevation={0}
         >
           <Toolbar>
-            <IconButton edge="start" onClick={() => setShowModal(false)}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setShowModal(false)}
+            >
               <Close />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1, fontWeight: "bold" }}>
-              {editId ? "Edit Exam" : "New Exam"}
+            <Typography
+              sx={{ ml: 2, flex: 1, fontWeight: "bold" }}
+              variant="h6"
+            >
+              {editItem ? "Edit Exam" : "Create Exam"}
             </Typography>
             <Button
               startIcon={<Article />}
@@ -296,9 +333,9 @@ const Exam = () => {
             <Button
               variant="contained"
               startIcon={<Save />}
-              onClick={handleSave}
+              onClick={handleSubmit}
             >
-              Save
+              Save Exam
             </Button>
           </Toolbar>
         </AppBar>
@@ -319,142 +356,196 @@ const Exam = () => {
               bgcolor: "background.paper",
             }}
           >
-            <Stack spacing={3} sx={{ maxWidth: 700, mx: "auto" }}>
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Exam Configuration
+            <Stack spacing={4} sx={{ maxWidth: 800, mx: "auto" }}>
+              <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="primary"
+                  gutterBottom
+                  sx={{ fontWeight: "bold" }}
+                >
+                  1. Basic Settings
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                <Stack spacing={3} mt={2}>
+                  <TextField
+                    label="Exam Title"
+                    fullWidth
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
+                  />
+                  <Stack direction="row" spacing={2}>
+                    <FormControl fullWidth>
+                      <InputLabel>Level</InputLabel>
+                      <Select
+                        value={form.level}
+                        label="Level"
+                        onChange={(e) =>
+                          setForm({ ...form, level: e.target.value })
+                        }
+                      >
+                        {levels.map((l) => (
+                          <MenuItem key={l._id} value={l._id}>
+                            {l.code}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                      <InputLabel>Type</InputLabel>
+                      <Select
+                        value={form.examType}
+                        label="Type"
+                        onChange={(e) =>
+                          setForm({ ...form, examType: e.target.value })
+                        }
+                      >
+                        {[
+                          "Chapter Test",
+                          "Final Exam",
+                          "Mock JLPT",
+                          "Placement Test",
+                        ].map((t) => (
+                          <MenuItem key={t} value={t}>
+                            {t}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                     <TextField
-                      fullWidth
-                      label="Title"
-                      value={form.title}
-                      onChange={(e) =>
-                        setForm({ ...form, title: e.target.value })
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Level"
-                      value={form.level}
-                      onChange={(e) =>
-                        setForm({ ...form, level: e.target.value })
-                      }
-                    >
-                      {levels.map((l) => (
-                        <MenuItem key={l._id} value={l._id}>
-                          {l.code}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Exam Type"
-                      value={form.examType}
-                      onChange={(e) =>
-                        setForm({ ...form, examType: e.target.value })
-                      }
-                    >
-                      {EXAM_TYPES.map((t) => (
-                        <MenuItem key={t} value={t}>
-                          {t}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
+                      label="Time (Min)"
                       type="number"
-                      label="Time (Mins)"
+                      sx={{ width: 150 }}
                       value={form.durationMinutes}
                       onChange={(e) =>
                         setForm({ ...form, durationMinutes: e.target.value })
                       }
                     />
-                  </Grid>
-                </Grid>
+                  </Stack>
+                </Stack>
               </Paper>
 
-              <Autocomplete
-                multiple
-                options={questionsPool}
-                getOptionLabel={(o) => o.text || ""}
-                value={form.questions}
-                isOptionEqualToValue={(o, v) => o._id === v._id}
-                onChange={(_, val) => setForm({ ...form, questions: val })}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Questions"
-                    variant="outlined"
-                  />
-                )}
-              />
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  color="primary"
+                  gutterBottom
+                  sx={{ fontWeight: "bold" }}
+                >
+                  2. Select Questions
+                </Typography>
+                <Autocomplete
+                  multiple
+                  options={questionsPool}
+                  getOptionLabel={(option) =>
+                    `[${option.category || "Q"}] ${option.text}`
+                  }
+                  value={form.questions}
+                  isOptionEqualToValue={(opt, val) => opt._id === val._id}
+                  onChange={(_, newValue) =>
+                    setForm({ ...form, questions: newValue })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      placeholder="Search questions..."
+                    />
+                  )}
+                  renderTags={() => null}
+                />
+              </Box>
 
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="exam-items">
-                  {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef}>
-                      {form.questions.map((q, index) => (
-                        <Draggable
-                          key={q._id}
-                          draggableId={q._id}
-                          index={index}
-                        >
-                          {(p) => (
-                            <Paper
-                              ref={p.innerRef}
-                              {...p.draggableProps}
-                              sx={{
-                                p: 2,
-                                mb: 1,
-                                display: "flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Box {...p.dragHandleProps} sx={{ mr: 2 }}>
-                                <DragIndicator color="action" />
-                              </Box>
-                              <Typography variant="body2" sx={{ flex: 1 }}>
-                                {index + 1}. {q.text}
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => {
-                                  const copy = [...form.questions];
-                                  copy.splice(index, 1);
-                                  setForm({ ...form, questions: copy });
+              <Box>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  sx={{ mb: 2 }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    color="primary"
+                    sx={{ fontWeight: "bold" }}
+                  >
+                    3. Question Sequence
+                  </Typography>
+                  <Chip
+                    label={`${form.questions.length} Items`}
+                    size="small"
+                    color="primary"
+                  />
+                </Stack>
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="exam-list">
+                    {(provided) => (
+                      <Stack
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        spacing={1}
+                      >
+                        {form.questions.map((q, index) => (
+                          <Draggable
+                            key={q._id}
+                            draggableId={q._id}
+                            index={index}
+                          >
+                            {(p, s) => (
+                              <Paper
+                                ref={p.innerRef}
+                                {...p.draggableProps}
+                                sx={{
+                                  p: 2,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  bgcolor: s.isDragging
+                                    ? alpha(theme.palette.primary.main, 0.05)
+                                    : "background.paper",
+                                  border: "1px solid",
+                                  borderColor: s.isDragging
+                                    ? "primary.main"
+                                    : "divider",
                                 }}
                               >
-                                <Delete fontSize="small" />
-                              </IconButton>
-                            </Paper>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+                                <Box {...p.dragHandleProps} sx={{ mr: 2 }}>
+                                  <DragIndicator color="action" />
+                                </Box>
+                                <Typography
+                                  variant="body2"
+                                  sx={{ flexGrow: 1 }}
+                                >
+                                  <b>{index + 1}.</b> {q.text}
+                                </Typography>
+                                <IconButton
+                                  color="error"
+                                  size="small"
+                                  onClick={() => {
+                                    const updated = [...form.questions];
+                                    updated.splice(index, 1);
+                                    setForm({ ...form, questions: updated });
+                                  }}
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              </Paper>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </Stack>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </Box>
             </Stack>
           </Box>
 
-          {/* PREVIEW SECTION (JLPT BUBBLE STYLE) */}
+          {/* PREVIEW SECTION (JLPT STYLE) */}
           {showPreview && (
             <Box
               sx={{
                 flex: 0.6,
-                bgcolor: "#454545",
+                bgcolor: "#333",
                 p: 4,
                 overflowY: "auto",
                 display: "flex",
@@ -468,24 +559,23 @@ const Exam = () => {
                 startIcon={<PictureAsPdf />}
                 sx={{ mb: 3 }}
                 onClick={handlePrint}
-                className="no-print"
               >
-                Print Official Sheet
+                Export Official PDF
               </Button>
 
               <div
-                id="exam-print-area"
+                id="jlpt-print-area"
                 style={{
                   width: "210mm",
                   minHeight: "297mm",
                   padding: "20mm",
                   backgroundColor: "white",
                   color: "black",
-                  fontFamily: "'MS Mincho', 'Sawarabi Mincho', serif",
+                  fontFamily: "serif",
                   boxSizing: "border-box",
                 }}
               >
-                {/* JLPT Header Style */}
+                {/* Header */}
                 <div
                   style={{
                     border: "2px solid black",
@@ -499,80 +589,70 @@ const Exam = () => {
                       justifyContent: "space-between",
                       borderBottom: "1px solid black",
                       paddingBottom: "10px",
-                      marginBottom: "10px",
                     }}
                   >
-                    <span style={{ fontSize: "14pt", fontWeight: "bold" }}>
-                      {currentLevel?.code || "N?"} {form.examType}
+                    <span style={{ fontWeight: "bold" }}>
+                      {currentLevel?.code || "N?"} - {form.examType}
                     </span>
-                    <span style={{ fontSize: "12pt" }}>
-                      Time: {form.durationMinutes} min
-                    </span>
+                    <span>Time Limit: {form.durationMinutes} min</span>
                   </div>
                   <h1
                     style={{
                       textAlign: "center",
-                      margin: "10px 0",
+                      margin: "15px 0",
                       fontSize: "20pt",
+                      textTransform: "uppercase",
                     }}
                   >
-                    {form.title?.toUpperCase() || "EXAMINATION"}
+                    {form.title}
                   </h1>
                   <div
-                    style={{ marginTop: "15px", display: "flex", gap: "20px" }}
+                    style={{ display: "flex", gap: "20px", marginTop: "10px" }}
                   >
                     <div
                       style={{
                         border: "1px solid black",
-                        padding: "5px 15px",
+                        padding: "5px 10px",
                         flex: 2,
                       }}
                     >
-                      Name: __________________________
+                      受験番号 (ID):{" "}
                     </div>
                     <div
                       style={{
                         border: "1px solid black",
-                        padding: "5px 15px",
-                        flex: 1,
+                        padding: "5px 10px",
+                        flex: 3,
                       }}
                     >
-                      ID: ____________
+                      氏名 (Name):{" "}
                     </div>
                   </div>
                 </div>
 
-                {/* Questions with Circles */}
+                {/* Questions */}
                 <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "20px",
+                    gap: "25px",
                   }}
                 >
                   {form.questions.map((q, index) => (
-                    <div
-                      key={q._id || index}
-                      style={{
-                        pageBreakInside: "avoid",
-                        borderBottom: "1px solid #eee",
-                        paddingBottom: "15px",
-                      }}
-                    >
+                    <div key={q._id} style={{ pageBreakInside: "avoid" }}>
                       <div
                         style={{
                           display: "flex",
                           gap: "10px",
-                          marginBottom: "12px",
+                          marginBottom: "10px",
                         }}
                       >
                         <span
                           style={{
-                            fontWeight: "bold",
                             background: "#000",
                             color: "#fff",
                             padding: "0 8px",
-                            height: "24px",
+                            fontWeight: "bold",
                           }}
                         >
                           {index + 1}
@@ -582,51 +662,67 @@ const Exam = () => {
                         </div>
                       </div>
 
-                      {q.options && q.options.length > 0 && (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "20px",
-                            paddingLeft: "40px",
-                          }}
-                        >
-                          {q.options.map((opt, i) => (
+                      {/* BUBBLES */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "30px",
+                          paddingLeft: "40px",
+                        }}
+                      >
+                        {(q.options || ["", "", "", ""]).map((opt, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
                             <div
-                              key={i}
                               style={{
+                                width: "24px",
+                                height: "24px",
+                                border: "1.5px solid black",
+                                borderRadius: "50%",
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "8px",
+                                justifyContent: "center",
+                                fontWeight: "bold",
+                                fontSize: "10pt",
                               }}
                             >
-                              {/* JLPT Bubble Style */}
-                              <div
-                                style={{
-                                  width: "22px",
-                                  height: "22px",
-                                  border: "1.5px solid black",
-                                  borderRadius: "50%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: "10pt",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {i + 1}
-                              </div>
-                              <span style={{ fontSize: "11pt" }}>{opt}</span>
+                              {i + 1}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            <span style={{ fontSize: "11pt" }}>{opt}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </Box>
           )}
+        </Box>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
+        <Box sx={{ p: 3, textAlign: "center" }}>
+          <Warning color="error" sx={{ fontSize: 40 }} />
+          <Typography variant="h6">Delete this exam set?</Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ mt: 3 }}
+            justifyContent="center"
+          >
+            <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </Stack>
         </Box>
       </Dialog>
     </Box>
