@@ -1,12 +1,11 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Drawer,
-  AppBar,
   Toolbar,
   List,
   Typography,
-  Divider,
-  IconButton,
   ListItem,
   ListItemButton,
   ListItemIcon,
@@ -16,132 +15,80 @@ import {
   alpha,
 } from "@mui/material";
 import {
-  Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
   ExpandLess,
   ExpandMore,
   Dashboard as DashboardIcon,
-  ShoppingCart as ShoppingCartIcon,
-  People as PeopleIcon,
-  BarChart as BarChartIcon,
   Layers as LayersIcon,
-  Assignment as AssignmentIcon,
   Settings as SettingsIcon,
   Mail as MailIcon,
   People,
   HotelClass,
-  SentimentDissatisfied,
-  Description,
-  TextSnippet,
-  GradeRounded,
 } from "@mui/icons-material";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 280;
 
 const Sidebar = () => {
   const theme = useTheme();
-  const [openSubmenu, setOpenSubmenu] = useState(true);
-  const [activeItem, setActiveItem] = useState("Dashboard");
   const navigate = useNavigate();
-  const handleSubmenuClick = () => {
-    setOpenSubmenu(!openSubmenu);
+  
+  // 1. Fix: Use an object to track which specific submenus are open
+  const [openSubmenus, setOpenSubmenus] = useState({
+    Course: true,
+    Chapters: false,
+    Tests: false,
+  });
+  
+  const [activeItem, setActiveItem] = useState("Dashboard");
+
+  // Toggle specific submenu
+  const handleSubmenuClick = (menuText) => {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [menuText]: !prev[menuText],
+    }));
   };
 
   const handleRoute = (path, text) => {
     setActiveItem(text);
-    navigate(path);
+    if (path) navigate(path);
   };
 
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, type: "item" },
+    { text: "Dashboard", icon: <DashboardIcon />, type: "item", path: "/admin" },
     { text: "Users", icon: <People />, type: "item", path: "/admin/users" },
+    { text: "Level", icon: <HotelClass />, type: "item", path: "/admin/levels" },
+    {
+      text: "Course",
+      icon: <LayersIcon />,
+      type: "submenu",
+      children: [
+        { text: "Modules", path: "/admin/modules" },
+        { text: "Chapters", path: "/admin/chapters" },
+      ],
+    },
     {
       text: "Chapters",
-      icon: <GradeRounded />,
-      type: "item",
-      path: "/admin/chapters",
-    },
-    {
-      text: "Exams",
-      icon: <GradeRounded />,
-      type: "item",
-      path: "/admin/exams",
-    },
-    {
-      text: "Questions",
-      icon: <GradeRounded />,
-      type: "item",
-      path: "/admin/questions",
-    },
-    {
-      text: "Modules",
-      icon: <Description />,
-      type: "item",
-      path: "/admin/modules",
-    },
-    {
-      text: "Lessons",
-      icon: <TextSnippet />,
-      type: "item",
-      path: "/admin/lessons",
-    },
-    {
-      text: "Level",
-      icon: <HotelClass />,
-      type: "item",
-      path: "/admin/levels",
-    },
-    {
-      text: "Kanji",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/kanji",
-    },
-    {
-      text: "Vocabulary",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/vocabularies",
-    },
-    {
-      text: "Grammar",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/grammars",
-    },
-    {
-      text: "Renshuu A",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/renshuua",
-    },
-    {
-      text: "Renshuu B",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/renshuub",
-    },
-    {
-      text: "Renshuu C",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/renshuuc",
-    },
-    {
-      text: "Speaking",
-      icon: <SentimentDissatisfied />,
-      type: "item",
-      path: "/admin/speakings",
-    },
-    {
-      text: "Reports",
-      icon: <BarChartIcon />,
+      icon: <LayersIcon />,
       type: "submenu",
-      children: [{ text: "Sales Performance" }, { text: "Traffic Insights" }],
+      children: [
+        { text: "Kanji", path: "/admin/kanji" },
+        { text: "Vocabulary", path: "/admin/vocabularies" },
+        { text: "Grammar", path: "/admin/grammars" },
+        { text: "Renshuu A", path: "/admin/renshuua" },
+        { text: "Renshuu B", path: "/admin/renshuub" },
+        { text: "Renshuu C", path: "/admin/renshuuc" },
+        { text: "Speaking", path: "/admin/speakings" },
+      ],
     },
-    { text: "Integrations", icon: <LayersIcon />, type: "item" },
+    {
+      text: "Tests",
+      icon: <LayersIcon />,
+      type: "submenu",
+      children: [
+        { text: "Exams", path: "/admin/exams" },
+        { text: "Questions", path: "/admin/questions" },
+      ],
+    },
   ];
 
   const isParentActive = (item) => {
@@ -157,19 +104,11 @@ const Sidebar = () => {
     mb: 0.5,
     pl: 3,
     transition: "all 0.2s ease-in-out",
-    backgroundColor: isActive
-      ? alpha(theme.palette.primary.main, 0.1)
-      : "transparent",
+    backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.1) : "transparent",
     color: isActive ? "primary.main" : "text.secondary",
     "&:hover": {
-      backgroundColor: isActive
-        ? "transparent"
-        : alpha(theme.palette.primary.main, 0.1),
+      backgroundColor: alpha(theme.palette.primary.main, 0.05),
       color: "primary.main",
-      "& .main-indicator": {
-        height: "100%",
-        opacity: 1,
-      },
     },
     "& .main-indicator": {
       position: "absolute",
@@ -180,49 +119,27 @@ const Sidebar = () => {
       height: isActive ? "70%" : "0%",
       backgroundColor: theme.palette.primary.main,
       borderRadius: "0 4px 4px 0",
-      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "all 0.3s ease",
       opacity: isActive ? 1 : 0,
     },
   });
 
-  // Sublink Item Styles (Full height vertical line)
   const sublinkItemStyles = (isActive) => ({
     position: "relative",
-    borderRadius: "0 8px 8px 0",
-    mb: 0,
     pl: 7.5,
-    py: 1.2,
-    transition: "all 0.2s ease-in-out",
+    py: 1,
     color: isActive ? "primary.main" : "text.secondary",
-    backgroundColor: isActive
-      ? alpha(theme.palette.primary.main, 0.1)
-      : "transparent",
+    backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.05) : "transparent",
     "&:hover": {
-      backgroundColor: isActive
-        ? "transparent"
-        : alpha(theme.palette.primary.main, 0.1),
-      color: "primary.main",
-      "& .sub-indicator": {
-        backgroundColor: "primary.main",
-        width: "3px",
-      },
+      backgroundColor: alpha(theme.palette.primary.main, 0.05),
     },
-    // The Vertical Line (Full Height)
     "& .sub-indicator": {
       position: "absolute",
-      left: 36, // Centered under the parent icon
+      left: 36,
       top: 0,
       bottom: 0,
       width: "1.5px",
-      backgroundColor: isActive ? theme.palette.primary.main : "divider",
-      transition: "all 0.2s ease-in-out",
-      zIndex: 1,
-      "&:hover": {
-        "& .main-indicator": {
-          height: "100%",
-          opacity: 1,
-        },
-      },
+      backgroundColor: isActive ? theme.palette.primary.main : theme.palette.divider,
     },
   });
 
@@ -230,54 +147,26 @@ const Sidebar = () => {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar sx={{ px: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box
-            sx={{
-              bgcolor: "primary.main",
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <Box sx={{ bgcolor: "primary.main", width: 32, height: 32, borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <LayersIcon sx={{ color: "white", fontSize: 20 }} />
           </Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            DOA Admin
-          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>DOA Admin</Typography>
         </Box>
       </Toolbar>
 
-      <List component="nav" sx={{ pt: 2, pr: 0 }}>
+      <List component="nav" sx={{ pt: 2 }}>
         {menuItems.map((item) => {
           const isActive = activeItem === item.text;
           const parentActive = isParentActive(item);
+          const isSubmenuOpen = openSubmenus[item.text];
 
           if (item.type === "item") {
             return (
               <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  onClick={() => handleRoute(item.path, item.text)}
-                  sx={mainItemStyles(isActive)}
-                >
+                <ListItemButton onClick={() => handleRoute(item.path, item.text)} sx={mainItemStyles(isActive)}>
                   <Box className="main-indicator" />
-                  <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.text}
-                    primaryTypographyProps={{
-                      fontSize: "0.875rem",
-                      fontWeight: isActive ? 600 : 500,
-                    }}
-                  />
+                  <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: isActive ? 600 : 500 }} />
                 </ListItemButton>
               </ListItem>
             );
@@ -286,53 +175,21 @@ const Sidebar = () => {
           return (
             <React.Fragment key={item.text}>
               <ListItem disablePadding>
-                <ListItemButton
-                  onClick={handleSubmenuClick}
-                  sx={mainItemStyles(parentActive && !openSubmenu)}
-                >
+                <ListItemButton onClick={() => handleSubmenuClick(item.text)} sx={mainItemStyles(parentActive)}>
                   <Box className="main-indicator" />
-                  <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.text}
-                    primaryTypographyProps={{
-                      fontSize: "0.875rem",
-                      fontWeight: parentActive ? 600 : 500,
-                    }}
-                  />
-                  {openSubmenu ? (
-                    <ExpandLess fontSize="small" />
-                  ) : (
-                    <ExpandMore fontSize="small" />
-                  )}
+                  <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: parentActive ? 600 : 500 }} />
+                  {isSubmenuOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
                 </ListItemButton>
               </ListItem>
-              <Collapse in={openSubmenu} timeout="auto" unmountOnExit>
-                <List
-                  component="div"
-                  disablePadding
-                  sx={{ position: "relative" }}
-                >
-                  {item.children.map((child) => {
-                    const isChildActive = activeItem === child.text;
-                    return (
-                      <ListItemButton
-                        key={child.text}
-                        onClick={() => setActiveItem(child.text)}
-                        sx={sublinkItemStyles(isChildActive)}
-                      >
-                        <Box className="sub-indicator" />
-                        <ListItemText
-                          primary={child.text}
-                          primaryTypographyProps={{
-                            fontSize: "0.85rem",
-                            fontWeight: isChildActive ? 600 : 400,
-                          }}
-                        />
-                      </ListItemButton>
-                    );
-                  })}
+              <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.children.map((child) => (
+                    <ListItemButton key={child.text} onClick={() => handleRoute(child.path, child.text)} sx={sublinkItemStyles(activeItem === child.text)}>
+                      <Box className="sub-indicator" />
+                      <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: "0.85rem", fontWeight: activeItem === child.text ? 600 : 400 }} />
+                    </ListItemButton>
+                  ))}
                 </List>
               </Collapse>
             </React.Fragment>
@@ -341,35 +198,17 @@ const Sidebar = () => {
       </List>
 
       <Box sx={{ mt: "auto", p: 3 }}>
-        <Typography
-          variant="overline"
-          sx={{
-            px: 1,
-            fontWeight: 700,
-            color: "text.secondary",
-            fontSize: "0.7rem",
-          }}
-        >
-          Management
-        </Typography>
+        <Typography variant="overline" sx={{ px: 1, fontWeight: 700, color: "text.secondary", fontSize: "0.7rem" }}>Management</Typography>
         <List component="nav" sx={{ mt: 1 }}>
-          {["Settings", "Messages"].map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton
-                onClick={() => setActiveItem(text)}
-                sx={mainItemStyles(activeItem === text)}
-              >
+          {[
+            { text: "Settings", icon: <SettingsIcon /> },
+            { text: "Messages", icon: <MailIcon /> }
+          ].map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton onClick={() => setActiveItem(item.text)} sx={mainItemStyles(activeItem === item.text)}>
                 <Box className="main-indicator" />
-                <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
-                  {text === "Settings" ? <SettingsIcon /> : <MailIcon />}
-                </ListItemIcon>
-                <ListItemText
-                  primary={text}
-                  primaryTypographyProps={{
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                  }}
-                />
+                <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
           ))}
@@ -377,23 +216,22 @@ const Sidebar = () => {
       </Box>
     </Box>
   );
+
   return (
-    <Box>
-      <Drawer>{drawerContent}</Drawer>
-      <Drawer
-        variant="permanent"
-        sx={{
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
           width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-          },
-        }}
-        open
-      >
-        {drawerContent}
-      </Drawer>
-    </Box>
+          boxSizing: "border-box",
+          borderRight: `1px solid ${theme.palette.divider}`,
+        },
+      }}
+    >
+      {drawerContent}
+    </Drawer>
   );
 };
 
