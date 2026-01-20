@@ -86,7 +86,7 @@ const Module = () => {
       setModules(mRes.data.data);
       setLevels(lRes.data);
       setChapters(cRes.data.data);
-      setExams(eRes.data);
+      setExams(eRes.data.data || []);
     } catch (error) {
       console.error("Fetch Error:", error);
     } finally {
@@ -364,7 +364,7 @@ const Module = () => {
             </Box>
 
             <CardActions
-              sx={{ justifyContent: "flex-end", p: 1, bgcolor: "grey.50" }}
+              sx={{ justifyContent: "flex-end", p: 1, bgcolor: "background.transparent" }}
             >
               <IconButton
                 size="small"
