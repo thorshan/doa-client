@@ -285,7 +285,7 @@ const RenshuuA = () => {
                 <Paper
                   key={idx}
                   variant="outlined"
-                  sx={{ p: 2, mb: 2, bgcolor: "grey.50" }}
+                  sx={{ p: 2, mb: 2, bgcolor: "background.paper" }}
                 >
                   <Stack direction="row" spacing={2} alignItems="flex-start">
                     <TextField

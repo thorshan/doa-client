@@ -331,7 +331,7 @@ const Grammar = () => {
                 key={idx}
                 sx={{
                   p: 2,
-                  bgcolor: "grey.50",
+                  bgcolor: "background.paper",
                   display: "flex",
                   gap: 2,
                   alignItems: "center",
@@ -341,6 +341,9 @@ const Grammar = () => {
                   label="Example Structure"
                   size="small"
                   fullWidth
+                  sx={{
+                    bgcolor: "background.paper"
+                  }}
                   value={ex.structure}
                   onChange={(e) =>
                     updateExample(idx, "structure", e.target.value)
@@ -350,6 +353,9 @@ const Grammar = () => {
                   label="Meaning"
                   size="small"
                   fullWidth
+                  sx={{
+                    bgcolor: "background.paper"
+                  }}
                   value={ex.meaning}
                   onChange={(e) =>
                     updateExample(idx, "meaning", e.target.value)

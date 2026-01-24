@@ -28,6 +28,7 @@ import { levelApi } from "../../api/levelApi";
 import { translations } from "../../constants/translations";
 import { useLanguage } from "../../context/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { examApi } from "../../api/examApi";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -38,6 +39,7 @@ const Chapter = () => {
   const { language } = useLanguage();
   const [chapters, setChapters] = useState([]);
   const [levels, setLevels] = useState([]);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editChapter, setEditChapter] = useState(null);
@@ -50,6 +52,7 @@ const Chapter = () => {
   const [form, setForm] = useState({
     index: "",
     level: "",
+    exam: "",
   });
 
   // Hotkey Search (Ctrl+K / Cmd+K)
@@ -71,12 +74,14 @@ const Chapter = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [chRes, lvlRes] = await Promise.all([
+      const [chRes, lvlRes, examRes] = await Promise.all([
         chapterApi.getAllChapter(),
         levelApi.getAllLevel(),
+        examApi.getAllExams(),
       ]);
       setChapters(chRes.data.data);
       setLevels(lvlRes.data);
+      setExams(examRes.data.data);
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -94,10 +99,11 @@ const Chapter = () => {
       setForm({
         index: chapter.index,
         level: chapter.level?._id || chapter.level,
+        exam: chapter.exam?._id || chapter.exam,
       });
     } else {
       setEditChapter(null);
-      setForm({ index: "", level: "" });
+      setForm({ index: "", level: "" , exam: ""});
     }
     setShowModal(true);
   };
@@ -214,6 +220,20 @@ const Chapter = () => {
               ))}
             </Select>
           </FormControl>
+          <FormControl fullWidth size="small" margin="normal">
+            <InputLabel>Exam</InputLabel>
+            <Select
+              label="Exam"
+              value={form.exam}
+              onChange={(e) => setForm({ ...form, exam: e.target.value })}
+            >
+              {exams.map((ex) => (
+                <MenuItem key={ex._id} value={ex._id}>
+                  {ex.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
       </Dialog>
 
@@ -267,12 +287,23 @@ const Chapter = () => {
             </Box>
             <Box sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Level:{" "}
+                Level : {" "}
                 <Box
                   component="span"
                   sx={{ fontWeight: "bold", color: "primary.main" }}
                 >
                   {ch.level?.code}
+                </Box>
+              </Typography>
+            </Box>
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Exam : {" "}
+                <Box
+                  component="span"
+                  sx={{ fontWeight: "bold", color: "primary.main" }}
+                >
+                  {ch.exam?.title}
                 </Box>
               </Typography>
             </Box>
